@@ -2,7 +2,7 @@ from telethon import TelegramClient, events, sync
 import socks
 
 # These example values won't work. You must get your own api_id and
-# api_hash from https://my.telegram.org, under API Development.
+# api_hash from https://my.telegram.org, under API Development. test 2 group id:-1001296960728
 api_id = 396542
 api_hash = '185a7473e0c34763fa43eec8f77fee5f'
 
