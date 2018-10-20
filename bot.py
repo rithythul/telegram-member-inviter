@@ -31,6 +31,10 @@ CONFIGURATION_API_SECTION_NAME = 'API'
 CONFIGURATION_API_API_ID_SECTION_NAME = 'API_ID'
 CONFIGURATION_API_API_HASH_SECTION_NAME = 'API_HASH'
 CONFIGURATION_GROUP_SECTION_NAME = 'group'
+CONFIGURATION_PROXY_SECTION_NAME = 'proxy'
+CONFIGURATION_PROXY_PROTOCOL_NAME = 'protocol'
+CONFIGURATION_PROXY_HOST_NAME = 'host'
+CONFIGURATION_PROXY_PORT_NAME = 'port'
 CONFIGURATION_GROUP_INVITE_TO_THIS_GROUP_SECTION_NAME = 'group_id_to_invite'
 
 # Default limit and offset to get participants of channel 
@@ -98,12 +102,25 @@ else:
 
 if get_env('TG_WANT_TO_USE_PROXY', 'Do you want to use proxy? (y/n) ') == 'y':
     want_to_use_proxy = True
-    if get_env('TG_PROXY_PROTOCOL', 'What is you protocol? (HTTP/SOCKS5) ') == 'HTTP':
-        protocol = socks.HTTP
+    use_old_proxy_settings = get_env('TG_PROXY_USE_OLD', 'Want to use old proxy settings? (y/n) ') == 'y'
+    if not use_old_proxy_settings:
+        if get_env('TG_PROXY_PROTOCOL', 'What is you protocol? (HTTP/SOCKS5) ') == 'HTTP':
+            protocol = socks.HTTP
+        else:
+            protocol = socks.SOCKS5
+        host = get_env('TG_PROXY_HOST', 'Enter your host? ')
+        port = get_env('TG_PROXY_PORT', 'Enter your port? ', int)
+        data[CONFIGURATION_PROXY_SECTION_NAME] = {
+            CONFIGURATION_PROXY_HOST_NAME: host,
+            CONFIGURATION_PROXY_PORT_NAME: port,
+            CONFIGURATION_PROXY_PROTOCOL_NAME: protocol
+        }
     else:
-        protocol = socks.SOCKS5
-    host = get_env('TG_PROXY_HOST', 'Enter your host? ')
-    port = get_env('TG_PROXY_PORT', 'Enter your port? ', int)
+       with open(CONFIGURATION_FILE_NAME) as json_file: # Get values from file
+           data[CONFIGURATION_PROXY_SECTION_NAME] = json.load(json_file)[CONFIGURATION_PROXY_SECTION_NAME]
+           host = data[CONFIGURATION_PROXY_SECTION_NAME][CONFIGURATION_PROXY_HOST_NAME]
+           protocol = data[CONFIGURATION_PROXY_SECTION_NAME][CONFIGURATION_PROXY_PROTOCOL_NAME]
+           port = data[CONFIGURATION_PROXY_SECTION_NAME][CONFIGURATION_PROXY_PORT_NAME]
 
 # Make sure to update all values
 with open(CONFIGURATION_FILE_NAME, 'w') as json_file:        
