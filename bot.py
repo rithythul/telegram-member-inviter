@@ -36,10 +36,11 @@ CONFIGURATION_PROXY_PROTOCOL_NAME = 'protocol'
 CONFIGURATION_PROXY_HOST_NAME = 'host'
 CONFIGURATION_PROXY_PORT_NAME = 'port'
 CONFIGURATION_GROUP_INVITE_TO_THIS_GROUP_SECTION_NAME = 'group_id_to_invite'
+TELEGRAM_LIMITATION_TO_INVITE_USER_BY_CLIENT = 50
 
 # Default limit and offset to get participants of channel 
 offset = 0
-limit = 9999
+limit = 100
 
 data = {}  
 data[CONFIGURATION_CLIENTS_SECTION_NAME] = []  
@@ -142,10 +143,15 @@ for client in data[CONFIGURATION_CLIENTS_SECTION_NAME]:
             api_hash=API_HASH
         ))
 
+# Log in all clients
+for client in clients:
+    print('Logged is as: %s' % (client.session.filename))
+    client.start()
+
 for client in clients:
     print('Current Session Was: %s' % (client.session.filename))
-    client.start()
     client_channels_or_groups_id = []
+    count_of_invited_user_by_this_client = 0
     # Fetching all the dialogs (conversations you have open)
     for dialog in client.get_dialogs():
         if dialog.is_user:
@@ -157,10 +163,21 @@ for client in clients:
         client_channels_or_groups_id.append(dialog.id)
 
     for client_or_channel_id in client_channels_or_groups_id:
+        # Depricated. reset user array in each itteration
         all_users_id_also_channel_creator_id_except_admins_and_bots = []
-
+        # Check telegram limitation to inive users by each client
+        if count_of_invited_user_by_this_client > TELEGRAM_LIMITATION_TO_INVITE_USER_BY_CLIENT:
+            print('Try to change client because telegram limitation for this client was applied')
+            break
+                
         # Collect all users except admins into the array.
         while True:
+            # Check telegram limitation to inive users by each client
+            if count_of_invited_user_by_this_client > TELEGRAM_LIMITATION_TO_INVITE_USER_BY_CLIENT:
+                print('Try to change client because telegram limitation for this client was applied')
+                break
+            # Reset the array
+            all_users_id_also_channel_creator_id_except_admins_and_bots = []
             participants = client(GetParticipantsRequest(
                 client_or_channel_id, ChannelParticipantsSearch(''), offset, limit, hash=0
             ))
@@ -179,12 +196,20 @@ for client in clients:
                         # If user was bot the remove it from list and continue
                         if user.bot:
                             break
+                        if user.deleted:
+                            break
                         # Add finded user to the array
                         all_users_id_also_channel_creator_id_except_admins_and_bots.append(user.id)
                         break
                     # Other users was skipped
                     continue
             offset += len(participants.participants)
+            # Add users to the channel
+            print('Try to add %d users' % len(all_users_id_also_channel_creator_id_except_admins_and_bots))
+            client_add_response = client(InviteToChannelRequest(INVITE_TO_THIS_GROUP_ID, all_users_id_also_channel_creator_id_except_admins_and_bots))
+            count_of_invited_user_by_this_client += len(client_add_response.users)
+            # Check telegram limitation to inive users by each client
+            if count_of_invited_user_by_this_client > TELEGRAM_LIMITATION_TO_INVITE_USER_BY_CLIENT:
+                print('Try to change client because telegram limitation for this client was applied')
+                break
 
-        # Add users to the channel
-        client(InviteToChannelRequest(INVITE_TO_THIS_GROUP_ID, all_users_id_also_channel_creator_id_except_admins_and_bots))
