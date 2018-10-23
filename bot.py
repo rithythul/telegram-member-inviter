@@ -158,16 +158,10 @@ for client in clients:
     # Fetching all the dialogs (conversations you have open)
     for dialog in client.get_dialogs():
         if dialog.is_user:
-            print('----> Trying to stop client')
-            client.disconnect()
             continue
         if not dialog.is_channel:
-            print('----> Trying to stop client')
-            client.disconnect()
             continue
         if not dialog.is_group:
-            print('----> Trying to stop client')
-            client.disconnect()
             continue
         client_channels_or_groups_id.append(dialog.id)
 
