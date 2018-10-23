@@ -143,13 +143,11 @@ for client in data[CONFIGURATION_CLIENTS_SECTION_NAME]:
             api_hash=API_HASH
         ))
 
-# Log in all clients
 for client in clients:
-    print('Logged is as: %s' % (client.session.filename))
+    # Start client
+    print('----> Trying to start client')
     client.start()
-
-for client in clients:
-    print('Current Session Was: %s' % (client.session.filename))
+    print('----> Logged in as: %s' % (client.session.filename))
     # Maybe some of the clients want to skip
     if get_env('TG_WANT_TO_USE_THIS_CLIENT', 'Do you want to use this client? (y/n) ') == 'n':
         continue
@@ -170,14 +168,15 @@ for client in clients:
         all_users_id_also_channel_creator_id_except_admins_and_bots = []
         # Check telegram limitation to inive users by each client
         if count_of_invited_user_by_this_client > TELEGRAM_LIMITATION_TO_INVITE_USER_BY_CLIENT:
-            print('Try to change client because telegram limitation for this client was applied')
+            print('----> Trying to stop client')
+            client.disconnect()
+            print('----> Trying to change client because: telegram limitation for this client was applied')
             break
                 
         # Collect all users except admins into the array.
         while True:
             # Check telegram limitation to inive users by each client
             if count_of_invited_user_by_this_client > TELEGRAM_LIMITATION_TO_INVITE_USER_BY_CLIENT:
-                print('Try to change client because telegram limitation for this client was applied')
                 break
             # Reset the array
             all_users_id_also_channel_creator_id_except_admins_and_bots = []
@@ -214,6 +213,7 @@ for client in clients:
             count_of_invited_user_by_this_client += len(client_add_response.users)
             # Check telegram limitation to inive users by each client
             if count_of_invited_user_by_this_client > TELEGRAM_LIMITATION_TO_INVITE_USER_BY_CLIENT:
-                print('Try to change client because telegram limitation for this client was applied')
                 break
-
+    # Stop current client
+    print('----> Trying to stop client')
+    client.disconnect()
