@@ -90,17 +90,16 @@ want_to_use_proxy = False
 current_session_name = ''
 
 # APPLICATION WELCOME MESSAGE
-with open(VERSION_FILE_NAME) as version_file: # Get clients values from file
-    WELCOME_MESSAGE = """ 
-    This application used to add members of clients group into the terget group.
-    Version: %s
-    Python Version: 3.6.6
-    Usage: - Just answer the questions.
-            - To skip client when trying to add members just use CTRL+C
-    Copyright MJHP-ME 2018
-    """
-    current_version = json.load(version_file)['version']
-    print(WELCOME_MESSAGE % current_version)
+WELCOME_MESSAGE = """ 
+This application used to add members of clients group into the terget group.
+Version: %s
+Python Version: 3.6.6
+Usage: - Just answer the questions.
+        - To skip client when trying to add members just use CTRL+C
+Copyright MJHP-ME 2018
+"""
+current_version = '1.1.2'
+print(WELCOME_MESSAGE % current_version)
 
 # Get as many as clients you want
 while True:
