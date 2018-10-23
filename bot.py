@@ -144,6 +144,7 @@ for client in data[CONFIGURATION_CLIENTS_SECTION_NAME]:
         ))
 
 for client in clients:
+    print('----> Current session: %s' % (client.session.filename))
     # Maybe some of the clients want to skip
     if get_env('TG_WANT_TO_USE_THIS_CLIENT', 'Do you want to use this client? (y/n) ') == 'n':
         # Start client
