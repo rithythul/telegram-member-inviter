@@ -144,12 +144,12 @@ for client in data[CONFIGURATION_CLIENTS_SECTION_NAME]:
         ))
 
 for client in clients:
-    # Start client
-    print('----> Trying to start client')
-    client.start()
-    print('----> Logged in as: %s' % (client.session.filename))
     # Maybe some of the clients want to skip
     if get_env('TG_WANT_TO_USE_THIS_CLIENT', 'Do you want to use this client? (y/n) ') == 'n':
+        # Start client
+        print('----> Trying to start client')
+        client.start()
+        print('----> Logged in as: %s' % (client.session.filename))
         continue
     client_channels_or_groups_id = []
     count_of_invited_user_by_this_client = 0
