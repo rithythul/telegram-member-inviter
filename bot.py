@@ -179,30 +179,36 @@ for client in data[CONFIGURATION_CLIENTS_SECTION_NAME]:
             api_hash=API_HASH
         ))
 
-with GracefulInterruptHandler() as h:
-    for client in clients:
-        print('----> Current session: %s' % (client.session.filename))
-        # Maybe some of the clients want to skip
-        if get_env('TG_WANT_TO_USE_THIS_CLIENT', 'Do you want to use this client? (y/n) ') == 'n':
+for client in clients:
+    print('----> Current session: %s' % (client.session.filename))
+    # Maybe some of the clients want to skip
+    if get_env('TG_WANT_TO_USE_THIS_CLIENT', 'Do you want to use this client? (y/n) ') == 'n':
+        continue
+    else:
+        # Start client
+        print('----> Trying to start client')
+        client.start()
+        print('----> Successfuly Logged in as: %s' % (client.session.filename))
+    client_channels_or_groups_id = []
+    count_of_invited_user_by_this_client = 0
+    # Fetching all the dialogs (conversations you have open)
+    for dialog in client.get_dialogs():
+        if dialog.is_user:
             continue
-        else:
-            # Start client
-            print('----> Trying to start client')
-            client.start()
-            print('----> Successfuly Logged in as: %s' % (client.session.filename))
-        client_channels_or_groups_id = []
-        count_of_invited_user_by_this_client = 0
-        # Fetching all the dialogs (conversations you have open)
-        for dialog in client.get_dialogs():
-            if dialog.is_user:
-                continue
-            if not dialog.is_channel:
-                continue
-            if not dialog.is_group:
-                continue
-            client_channels_or_groups_id.append(dialog.id)
+        if not dialog.is_channel:
+            continue
+        if not dialog.is_group:
+            continue
+        client_channels_or_groups_id.append(dialog.id)
 
+    with GracefulInterruptHandler() as h:
         for client_or_channel_id in client_channels_or_groups_id:
+            if h.interrupted:
+                print("----> Trying to change client")
+                # Stop current client
+                print('----> Trying to stop client')
+                client.disconnect()
+                break
             # Depricated. reset user array in each itteration
             all_users_id_also_channel_creator_id_except_admins_and_bots = []
             # Check telegram limitation to inive users by each client
@@ -212,11 +218,14 @@ with GracefulInterruptHandler() as h:
                 print('----> Trying to change client because: telegram limitation for this client was applied')
                 break
                     
+
             # Collect all users except admins into the array.
             while True:
                 if h.interrupted:
                     print("----> Trying to change client")
-                    time.sleep(2)
+                    # Stop current client
+                    print('----> Trying to stop client')
+                    client.disconnect()
                     break
                 # Check telegram limitation to inive users by each client
                 if count_of_invited_user_by_this_client > TELEGRAM_LIMITATION_TO_INVITE_USER_BY_CLIENT:
