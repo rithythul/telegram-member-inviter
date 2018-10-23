@@ -61,6 +61,7 @@ def get_env(name, message, cast=str):
 
 
 CONFIGURATION_FILE_NAME = 'clients.json'
+VERSION_FILE_NAME = 'version.json'
 CONFIGURATION_CLIENTS_SECTION_NAME = 'clients'
 CONFIGURATION_CLIENTS_SESSION_SECTION_NAME = 'session_name'
 CONFIGURATION_API_SECTION_NAME = 'API'
@@ -87,6 +88,19 @@ update_old_sessions = False
 anythings_to_update = False
 want_to_use_proxy = False
 current_session_name = ''
+
+# APPLICATION WELCOME MESSAGE
+with open(VERSION_FILE_NAME) as version_file: # Get clients values from file
+    WELCOME_MESSAGE = """ 
+    This application used to add members of clients group into the terget group.
+    Version: %s
+    Python Version: 3.6.6
+    Usage: - Just answer the questions.
+            - To skip client when trying to add members just use CTRL+C
+    Copyright MJHP-ME 2018
+    """
+    current_version = json.load(version_file)['version']
+    print(WELCOME_MESSAGE % current_version)
 
 # Get as many as clients you want
 while True:
