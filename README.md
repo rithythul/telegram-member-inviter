@@ -1,9 +1,8 @@
-# ربات کالر
+# CAller Robot
 
-این نرم افزار با استفاده از لایبراری ... توانایی پیدا کردن تمام گروه های کلاینت های اضافه شده در نرم افزار را دارد.
-با استفاده ازین کانال ها تمامی اعضاشان به گروه مورد نظر شما دعوت می شون
+This program can add all users in requested group to target group.
 
-# نیازمندی ها
+# Requirements
 
 ```shell
 pip install pysocks
