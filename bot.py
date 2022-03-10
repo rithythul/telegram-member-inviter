@@ -7,6 +7,7 @@ import json
 import socks
 import signal
 
+from termcolor import colored, cprint
 from telethon import TelegramClient, events, sync
 from telethon.tl.functions.channels import GetParticipantsRequest
 from telethon.tl.functions.channels import InviteToChannelRequest
@@ -52,7 +53,7 @@ def get_env(name, message, cast=str):
     if name in os.environ:
         return os.environ[name]
     while True:
-        value = input(message)
+        value = input(colored(message, 'magenta', attrs=['bold']))
         try:
             return cast(value)
         except ValueError as e:
@@ -113,8 +114,9 @@ Usage: - Please answer the questions!
        - You can use CTRL+C to skip the client when the application is trying to add members.
 Copyright Ⓒ 2018 MJHP-ME
 """
+
 current_version = '1.1.2'
-print(WELCOME_MESSAGE % current_version)
+cprint(WELCOME_MESSAGE % current_version, 'green', attrs=['bold'])
 
 # You can set up as many clients as you want
 while True:
@@ -123,7 +125,7 @@ while True:
     if not want_to_add_more_client:
         break
     if first_run:
-        print('[NOTE] Add more clients. The old one will be removed, so if you want to use old sessions, skip this step.')
+        cprint('[WARNING] Add more clients. The old one will be removed, so if you want to use old sessions, skip this step (n).', 'yellow')
         are_you_sure = get_env('TG_ARE_YOU_SURE', 'Are you sure? (y/n) ') == 'y'
     if not are_you_sure:
         break
@@ -208,15 +210,15 @@ for client in data[CONFIGURATION_CLIENTS_SECTION_NAME]:
         ))
 
 for client in clients:
-    print('----> Current session: %s' % (client.session.filename))
+    cprint('[INFO] Current session: %s' % (client.session.filename), 'cyan')
     # In some cases, a client may wish to skip a session
     if get_env('TG_WANT_TO_USE_THIS_CLIENT', 'Do you want to use this client? (y/n) ') == 'n':
         continue
     else:
         # Start client
-        print('----> Trying to start client')
+        cprint('[INFO] Trying to start client', 'cyan')
         client.start()
-        print('----> Successfuly Logged in as: %s' % (client.session.filename))
+        cprint('[INFO] Successfuly Logged in as: %s' % (client.session.filename), 'cyan')
     client_channels_or_groups_id = []
     count_of_invited_user_by_this_client = 0
     # Fetching all the dialogs (conversations you have open)
@@ -232,27 +234,27 @@ for client in clients:
     with GracefulInterruptHandler() as h:
         for client_or_channel_id in client_channels_or_groups_id:
             if h.interrupted:
-                print("----> Trying to change client")
+                cprint("[INFO] Trying to change client", 'cyan')
                 # Stop current client
-                print('----> Trying to stop client')
+                cprint('[INFO] Trying to stop client', 'cyan')
                 client.disconnect()
                 break
             # Depricated. reset user array in each itteration
             all_users_id_also_channel_creator_id_except_admins_and_bots = []
             # Check telegram limitation to inive users by each client
             if count_of_invited_user_by_this_client > TELEGRAM_LIMITATION_TO_INVITE_USER_BY_CLIENT:
-                print('----> Trying to stop client')
+                cprint('[INFO] Trying to stop client', 'cyan')
                 client.disconnect()
-                print('----> Trying to change client because: telegram limitation for this client was applied')
+                cprint('[INFO] Trying to change client because: telegram limitation for this client was applied', 'cyan')
                 break
                     
 
             # Collect all users except admins into the array.
             while True:
                 if h.interrupted:
-                    print("----> Trying to change client")
+                    cprint("[INFO] Trying to change client", 'cyan')
                     # Stop current client
-                    print('----> Trying to stop client')
+                    cprint('[INFO] Trying to stop client', 'cyan')
                     client.disconnect()
                     break
                 # Check telegram limitation to inive users by each client
@@ -287,13 +289,13 @@ for client in clients:
                         continue
                 offset += len(participants.participants)
                 # Add users to the channel
-                print('Try to add %d users' % len(all_users_id_also_channel_creator_id_except_admins_and_bots))
+                cprint('[INFO] Try to add %d users' % len(all_users_id_also_channel_creator_id_except_admins_and_bots), 'blue')
                 client_add_response = client(InviteToChannelRequest(INVITE_TO_THIS_GROUP_ID, all_users_id_also_channel_creator_id_except_admins_and_bots))
-                print('%d users invited' % len(client_add_response.users))
+                cprint('[SUCCESS] %d users invited' % len(client_add_response.users), 'green')
                 count_of_invited_user_by_this_client += len(client_add_response.users)
                 # Check telegram limitation to inive users by each client
                 if count_of_invited_user_by_this_client > TELEGRAM_LIMITATION_TO_INVITE_USER_BY_CLIENT:
                     break
         # Stop current client
-        print('----> Trying to stop client')
+        cprint('[INFO] Trying to stop client', 'cyan')
         client.disconnect()
