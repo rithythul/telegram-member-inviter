@@ -2,3 +2,7 @@
 *.session*
 *.jpg
 *.json
+*.spec
+build
+__pycache__
+dist
