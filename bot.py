@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# A simple script invite members from all clients groups into the target group
+# With this script, members of all clients will be added to the target group.
 import os
 import sys
 import time
@@ -75,7 +75,7 @@ CONFIGURATION_PROXY_PORT_NAME = 'port'
 CONFIGURATION_GROUP_INVITE_TO_THIS_GROUP_SECTION_NAME = 'group_id_to_invite'
 TELEGRAM_LIMITATION_TO_INVITE_USER_BY_CLIENT = 999
 
-# Default limit and offset to get participants of channel 
+# Default limit and offset to get channel participants.
 offset = 0
 limit = 100
 
@@ -91,24 +91,39 @@ current_session_name = ''
 
 # APPLICATION WELCOME MESSAGE
 WELCOME_MESSAGE = """ 
-This application used to add members of clients group into the terget group.
+
+                     ██████╗██████╗  █████╗ ██╗    ██╗██╗     ██╗███╗   ██╗ ██████╗                          
+                    ██╔════╝██╔══██╗██╔══██╗██║    ██║██║     ██║████╗  ██║██╔════╝                          
+                    ██║     ██████╔╝███████║██║ █╗ ██║██║     ██║██╔██╗ ██║██║  ███╗                         
+                    ██║     ██╔══██╗██╔══██║██║███╗██║██║     ██║██║╚██╗██║██║   ██║                         
+                    ╚██████╗██║  ██║██║  ██║╚███╔███╔╝███████╗██║██║ ╚████║╚██████╔╝                         
+                     ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝ ╚══╝╚══╝ ╚══════╝╚═╝╚═╝  ╚═══╝ ╚═════╝                          
+                                                                                                             
+ ██████╗ ██████╗  ██████╗ ██╗   ██╗██████╗     ███╗   ███╗███████╗███╗   ███╗██████╗ ███████╗██████╗ ███████╗
+██╔════╝ ██╔══██╗██╔═══██╗██║   ██║██╔══██╗    ████╗ ████║██╔════╝████╗ ████║██╔══██╗██╔════╝██╔══██╗██╔════╝
+██║  ███╗██████╔╝██║   ██║██║   ██║██████╔╝    ██╔████╔██║█████╗  ██╔████╔██║██████╔╝█████╗  ██████╔╝███████╗
+██║   ██║██╔══██╗██║   ██║██║   ██║██╔═══╝     ██║╚██╔╝██║██╔══╝  ██║╚██╔╝██║██╔══██╗██╔══╝  ██╔══██╗╚════██║
+╚██████╔╝██║  ██║╚██████╔╝╚██████╔╝██║         ██║ ╚═╝ ██║███████╗██║ ╚═╝ ██║██████╔╝███████╗██║  ██║███████║
+ ╚═════╝ ╚═╝  ╚═╝ ╚═════╝  ╚═════╝ ╚═╝         ╚═╝     ╚═╝╚══════╝╚═╝     ╚═╝╚═════╝ ╚══════╝╚═╝  ╚═╝╚══════
+                                                                                                             
+This application can be used to add all members of a group to the target group.
 Version: %s
 Python Version: 3.6.6
-Usage: - Just answer the questions.
-        - To skip client when trying to add members just use CTRL+C
-Copyright MJHP-ME 2018
+Usage: - Please answer the questions!
+       - You can use CTRL+C to skip the client when the application is trying to add members.
+Copyright Ⓒ 2018 MJHP-ME
 """
 current_version = '1.1.2'
 print(WELCOME_MESSAGE % current_version)
 
-# Get as many as clients you want
+# You can set up as many clients as you want
 while True:
     if not first_run:
-        want_to_add_more_client = get_env('TG_WANTED_TO_ADD_MORE_CLIENT', 'Do you want to still add more clients(y/n): ') == 'y'
+        want_to_add_more_client = get_env('TG_WANTED_TO_ADD_MORE_CLIENT', 'Would you like to add more clients? (y/n): ') == 'y'
     if not want_to_add_more_client:
         break
     if first_run:
-        print('Add more clients. the old one was removed, then if you want to use old sessions please skip this step.')
+        print('[NOTE] Add more clients. The old one will be removed, so if you want to use old sessions, skip this step.')
         are_you_sure = get_env('TG_ARE_YOU_SURE', 'Are you sure? (y/n) ') == 'y'
     if not are_you_sure:
         break
@@ -120,12 +135,12 @@ while True:
     if first_run:
         first_run = False
 
-# Get clients session from old values if not new values was set
+# Retrieve the old session values if no new values have been set for the client session
 if not anythings_to_update:
     with open(CONFIGURATION_FILE_NAME) as json_file: # Get clients values from file
         data[CONFIGURATION_CLIENTS_SECTION_NAME] = json.load(json_file)[CONFIGURATION_CLIENTS_SECTION_NAME]
 
-if get_env('TG_UPDATE_API_CONFIGURATIONS', 'Want to update APIs configurations? (y/n) ') == 'y':
+if get_env('TG_UPDATE_API_CONFIGURATIONS', 'Do you want to update API configurations? (y/n) ') == 'y':
     API_ID = get_env('TG_API_ID', 'Enter your API ID: ', int)
     API_HASH = get_env('TG_API_HASH', 'Enter your API hash: ')
     data[CONFIGURATION_API_SECTION_NAME] = {
@@ -139,7 +154,7 @@ else:
         API_ID = data[CONFIGURATION_API_SECTION_NAME][CONFIGURATION_API_API_ID_SECTION_NAME]
         API_HASH = data[CONFIGURATION_API_SECTION_NAME][CONFIGURATION_API_API_HASH_SECTION_NAME]
 
-if get_env('TG_INVITE_GROUP_ID', 'Want to update group ID to invite users to it? (y/n) ') == 'y':
+if get_env('TG_INVITE_GROUP_ID', 'Do you want to update the group ID (will be used to invite users to it)? (y/n) ') == 'y':
     INVITE_TO_THIS_GROUP_ID = get_env('TG_INVITE_GROUP_ID', 'Enter ID of group you want to add members to it: ', int)
     data[CONFIGURATION_GROUP_SECTION_NAME] = {
         CONFIGURATION_GROUP_INVITE_TO_THIS_GROUP_SECTION_NAME: INVITE_TO_THIS_GROUP_ID
@@ -152,14 +167,14 @@ else:
 
 if get_env('TG_WANT_TO_USE_PROXY', 'Do you want to use proxy? (y/n) ') == 'y':
     want_to_use_proxy = True
-    use_old_proxy_settings = get_env('TG_PROXY_USE_OLD', 'Want to use old proxy settings? (y/n) ') == 'y'
+    use_old_proxy_settings = get_env('TG_PROXY_USE_OLD', 'Do you want to use old proxy settings? (y/n) ') == 'y'
     if not use_old_proxy_settings:
-        if get_env('TG_PROXY_PROTOCOL', 'What is you protocol? (HTTP/SOCKS5) ') == 'HTTP':
+        if get_env('TG_PROXY_PROTOCOL', 'Enter the protocol? (HTTP/SOCKS5) ') == 'HTTP':
             protocol = socks.HTTP
         else:
             protocol = socks.SOCKS5
-        host = get_env('TG_PROXY_HOST', 'Enter your host? ')
-        port = get_env('TG_PROXY_PORT', 'Enter your port? ', int)
+        host = get_env('TG_PROXY_HOST', 'Enter the host? ')
+        port = get_env('TG_PROXY_PORT', 'Enter the port? ', int)
         data[CONFIGURATION_PROXY_SECTION_NAME] = {
             CONFIGURATION_PROXY_HOST_NAME: host,
             CONFIGURATION_PROXY_PORT_NAME: port,
@@ -172,7 +187,7 @@ if get_env('TG_WANT_TO_USE_PROXY', 'Do you want to use proxy? (y/n) ') == 'y':
            protocol = data[CONFIGURATION_PROXY_SECTION_NAME][CONFIGURATION_PROXY_PROTOCOL_NAME]
            port = data[CONFIGURATION_PROXY_SECTION_NAME][CONFIGURATION_PROXY_PORT_NAME]
 
-# Make sure to update all values
+# Ensure that all values are updated
 with open(CONFIGURATION_FILE_NAME, 'w') as json_file:        
     json.dump(data, json_file)
 
@@ -194,7 +209,7 @@ for client in data[CONFIGURATION_CLIENTS_SECTION_NAME]:
 
 for client in clients:
     print('----> Current session: %s' % (client.session.filename))
-    # Maybe some of the clients want to skip
+    # In some cases, a client may wish to skip a session
     if get_env('TG_WANT_TO_USE_THIS_CLIENT', 'Do you want to use this client? (y/n) ') == 'n':
         continue
     else:
