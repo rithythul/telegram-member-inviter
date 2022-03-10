@@ -115,7 +115,7 @@ Usage: - Please answer the questions!
 Copyright Ⓒ 2018 MJHP-ME
 """
 
-current_version = '1.1.2'
+current_version = '1.1.4'
 cprint(WELCOME_MESSAGE % current_version, 'green', attrs=['bold'])
 
 # You can set up as many clients as you want
