@@ -2,6 +2,7 @@
 *.session*
 *.jpg
 *.json
+!.devcontainer/*.json
 *.spec
 build
 __pycache__
