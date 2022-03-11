@@ -6,8 +6,6 @@ This program can add all users in requested group to target group.
 
 ```shell
 # Python 3.6.6
-pip install pysocks
-pip install telethon
 ```
 
 # Installation
