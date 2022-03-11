@@ -6,3 +6,5 @@ This application can be used to add your group members to a target group.
 
 You can download the binary file and run inside the terminal or run the script using Python 3.6.
 It will be an interactive shell.
+
+The executable files compiled for the Windows and Linux. Mac OS will be added later.
