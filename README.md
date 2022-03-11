@@ -1,5 +1,7 @@
 # Telegram User Inviter Robot
 
+![Terminal Screenshot](/assets/images/screenshot.png)
+
 This program can add all users in requested group to target group.
 
 # Requirements
