@@ -2,7 +2,7 @@
 
 ![Terminal Screenshot](/assets/images/screenshot.png)
 
-This program can add all users in requested group to target group.
+This program can crawl all users inside the client groups and add them to the target group. Clients should have intended permissions to add members to the target group.
 
 # Requirements
 
