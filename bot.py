@@ -95,7 +95,7 @@ def printBanner():
         - You can use CTRL+C to skip the client when the application is trying to add members.
     Copyright (c) 2018 MJHP-ME
     """
-    current_version = '1.1.4'
+    current_version = '1.1.5'
     log('success', WELCOME_MESSAGE % current_version)
 
 def main():

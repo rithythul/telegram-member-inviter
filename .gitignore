@@ -1,6 +1,5 @@
 .vscode
 *.session*
-*.jpg
 *.json
 !.devcontainer/*.json
 *.spec
