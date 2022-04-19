@@ -13,8 +13,14 @@ This program can crawl all users inside the client groups and add them to the ta
 # Installation
 ```shell
 pip install -r requirements.txt
-cp clients.example clients.json
 ```
+
+# Setup API configurations
+- Got to the [my telegram](https://my.telegram.org/).
+- Login with a phone number.
+- Click on `API development tools`.
+- Create an App.
+- The bot need the `App api_id` and `App api_hash`.
 
 # Run
 ```shell
