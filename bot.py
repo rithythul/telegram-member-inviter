@@ -90,9 +90,8 @@ def printBanner():
                                                                                                                 
     This application can be used to add all members of a group to the target group.
     Version: %s
-    Required Python Version: 3.6.6
     Usage: - Please answer the questions!
-        - You can use CTRL+C to skip the client when the application is trying to add members.
+           - You can use CTRL+C to skip the client when the application is trying to add members.
     Copyright (c) 2018 MJHP-ME
     """
     current_version = '1.1.5'

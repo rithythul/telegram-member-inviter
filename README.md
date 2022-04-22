@@ -7,7 +7,7 @@ This program can crawl all users inside the client groups and add them to the ta
 # Requirements
 
 ```shell
-# Python 3.6.6
+# Python 3.6.6 or higher
 ```
 
 # Installation
