@@ -7,7 +7,11 @@ import json
 import socks
 import signal
 
-from termcolor import colored, cprint
+from rich import print
+from rich.text import Text
+from rich.console import Console
+from rich.panel import Panel
+
 from telethon import TelegramClient, events, sync
 from telethon.tl.functions.channels import GetParticipantsRequest
 from telethon.tl.functions.channels import InviteToChannelRequest
@@ -49,26 +53,31 @@ class GracefulInterruptHandler(object):
         return True
 
 
-def get_env(name, message, cast=str):
+def get_env(name, message, cast=str, isPassword=False):
+    console = Console()
     if name in os.environ:
         return os.environ[name]
     while True:
-        value = input(colored(message, 'magenta', attrs=['bold']))
+        value = console.input(Text(message, style="green4 bold"), password=isPassword)
         try:
             return cast(value)
-        except ValueError as e:
-            print(e, file=sys.stderr)
+        except ValueError as error:
+            log('warning', 'Should be type of ' + str(cast.__name__) + '.')
             time.sleep(1)
 
 def log(type, message):
-    if type == 'info':
-        cprint('[' + type.upper() + '] ' + message, 'cyan', attrs=['bold'])
-    elif type == 'warning':
-        cprint('[' + type.upper() + '] ' + message, 'yellow', attrs=['bold'])
-    elif type == 'error':
-        cprint('[' + type.upper() + '] ' + message, 'red', attrs=['bold'])
-    elif type == 'success':
-        cprint('[' + type.upper() + '] ' + message, 'green', attrs=['bold'])
+    # @group()
+    def get_panel(type, message):
+        if type == 'info':
+            return Panel('[' + type.upper() + '] ' + message, border_style="cyan", style="cyan", expand=False)
+        elif type == 'warning':
+            return Panel('[' + type.upper() + '] ' + message, border_style="bright_yellow", style="bright_yellow", expand=False)
+        elif type == 'error':
+            return Panel('[' + type.upper() + '] ' + message, border_style="red", style="red")
+        elif type == 'success':
+            return Panel('[' + type.upper() + '] ' + message, border_style="green", style="green", expand=False)
+
+    print(get_panel(type, message))
 
 # APPLICATION WELCOME MESSAGE
 def printBanner():
@@ -132,8 +141,8 @@ def main():
         if not want_to_add_more_client:
             break
         if first_run:
-            log('warning', 'Add more clients. The old one will be removed, so if you want to use old sessions, skip this step (n).')
-            are_you_sure = get_env('TG_ARE_YOU_SURE', 'Are you sure? (y/n) ') == 'y'
+            log('warning', 'To skip this step, press (n) if you have already added clients and logged in with them.')
+            are_you_sure = get_env('TG_ARE_YOU_SURE', 'Do you want to add client? (y/n) ') == 'y'
         if not are_you_sure:
             break
         current_session_name = get_env('TG_CURRENR_SESSION_NAME', 'Enter session name (<your_name>): ')
@@ -150,8 +159,8 @@ def main():
             data[CONFIGURATION_CLIENTS_SECTION_NAME] = json.load(json_file)[CONFIGURATION_CLIENTS_SECTION_NAME]
 
     if get_env('TG_UPDATE_API_CONFIGURATIONS', 'Do you want to update API configurations? (y/n) ') == 'y':
-        API_ID = get_env('TG_API_ID', 'Enter your API ID: ', int)
-        API_HASH = get_env('TG_API_HASH', 'Enter your API hash: ')
+        API_ID = get_env('TG_API_ID', 'Enter your API ID: ', int, isPassword=True)
+        API_HASH = get_env('TG_API_HASH', 'Enter your API hash: ', isPassword=True)
         data[CONFIGURATION_API_SECTION_NAME] = {
             CONFIGURATION_API_API_ID_SECTION_NAME: API_ID,
             CONFIGURATION_API_API_HASH_SECTION_NAME: API_HASH
@@ -309,8 +318,13 @@ def main():
 
 
 if __name__ == '__main__':
-    printBanner()
     try:
-        main()
-    except Exception as e:
-        log('error', '%s' % e)
+        printBanner()
+        try:
+            main()
+        except Exception as e:
+            log('error', '%s' % e)
+    except KeyboardInterrupt as k:
+        console = Console()
+        console.print('\nBye :)', style="green")
+        sys.exit(0)
