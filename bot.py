@@ -4,8 +4,8 @@ import os
 import sys
 import time
 import json
-import socks
 import signal
+import socks
 
 from rich import print
 from rich.text import Text
@@ -17,8 +17,11 @@ from telethon.tl.functions.channels import GetParticipantsRequest
 from telethon.tl.functions.channels import InviteToChannelRequest
 from telethon.tl.types import ChannelParticipantsSearch
 
-# Capture SIGINT in Python
 class GracefulInterruptHandler(object):
+    """Handle key interupt
+
+    CTRL+C
+    """
 
     def __init__(self, sig=signal.SIGINT):
         self.sig = sig
@@ -66,7 +69,6 @@ def get_env(name, message, cast=str, isPassword=False):
             time.sleep(1)
 
 def log(type, message):
-    # @group()
     def get_panel(type, message):
         if type == 'info':
             return Panel('[' + type.upper() + '] ' + message, border_style="cyan", style="cyan", expand=False)
@@ -247,9 +249,9 @@ def main():
                 continue
             client_channels_or_groups_id.append(dialog.id)
 
-        with GracefulInterruptHandler() as h:
+        with GracefulInterruptHandler() as interrupt_handler:
             for client_or_channel_id in client_channels_or_groups_id:
-                if h.interrupted:
+                if interrupt_handler.interrupted:
                     log('info', 'Trying to change client')
                     # Stop current client
                     log('info', 'Trying to stop client')
@@ -267,7 +269,7 @@ def main():
 
                 # Collect all users except admins into the array.
                 while True:
-                    if h.interrupted:
+                    if interrupt_handler.interrupted:
                         log('info', 'Trying to change client')
                         # Stop current client
                         log('info', 'Trying to stop client')
