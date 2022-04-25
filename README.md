@@ -1,4 +1,4 @@
-# Telegram User Inviter Robot
+# Telegram User Inviter BOT
 
 ![Terminal Screenshot](/assets/images/1-1-6.png)
 
