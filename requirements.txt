@@ -2,3 +2,4 @@
 pysocks
 telethon
 rich
+pyinstaller
