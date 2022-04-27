@@ -137,7 +137,7 @@ def print_banner():
            - Use CTRL+C to skip the client.
     Copyright [repr.info](c) 2018 MJHP-ME[/repr.info]
 """
-    current_version = '1.1.6'
+    current_version = '1.1.7'
     get_console().print(Panel(Align.center(WELCOME_MESSAGE % current_version), highlight=True, style="repr.success"))
     get_console().print(Padding(Markdown(REMARKS), style="", pad=(0, 4, 0, 4)), highlight=True, style="repr.text")
 
