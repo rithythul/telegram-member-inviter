@@ -7,10 +7,14 @@ import json
 import signal
 import socks
 
-from rich import print
+from rich.align import Align
+from rich.highlighter import RegexHighlighter
+from rich.theme import Theme
 from rich.text import Text
 from rich.console import Console
 from rich.panel import Panel
+from rich.padding import Padding
+from rich.markdown import Markdown
 
 from telethon import TelegramClient, events, sync
 from telethon.tl.functions.channels import GetParticipantsRequest
@@ -57,56 +61,84 @@ class GracefulInterruptHandler(object):
 
 
 def get_env(name, message, cast=str, isPassword=False):
-    console = Console()
+    console = get_console()
     if name in os.environ:
         return os.environ[name]
     while True:
-        value = console.input(Text(message, style="green4 bold"), password=isPassword)
+        value = console.input(Text(message, style="repr.text"), password=isPassword)
         try:
             return cast(value)
         except ValueError as error:
             log('warning', 'Should be type of ' + str(cast.__name__) + '.')
             time.sleep(1)
 
+def get_console():
+    class Highlighter(RegexHighlighter):
+        """Apply style to anything that looks like to my intentions."""
+
+        base_style = "repr."
+        highlights = [
+            r"(?P<info>\[INFO\])",
+            r"(?P<success>\[SUCCESS\])",
+            r"(?P<warning>\[WARNING\])",
+            r"(?P<error>\[ERROR\])",
+            r"(?P<text> [\w\-\(\)\.]+)",
+            r"(?P<symbol>[\.,;:\-\!])",
+            r"(?P<command> \w+\+\w+)",
+        ]
+
+    theme = Theme({
+        'repr.info': 'cyan',
+        'repr.warning': 'yellow',
+        'repr.error': 'bold red',
+        'repr.success': 'green',
+        'repr.text': 'grey63',
+        'repr.command': 'cyan',
+        'repr.symbol': 'gray62',
+    })
+    console = Console(highlighter=Highlighter(), theme=theme)
+    return console
+
 def log(type, message):
     def get_panel(type, message):
-        if type == 'info':
-            return Panel('[' + type.upper() + '] ' + message, border_style="cyan", style="cyan", expand=False)
-        elif type == 'warning':
-            return Panel('[' + type.upper() + '] ' + message, border_style="bright_yellow", style="bright_yellow", expand=False)
-        elif type == 'error':
-            return Panel('[' + type.upper() + '] ' + message, border_style="red", style="red")
-        elif type == 'success':
-            return Panel('[' + type.upper() + '] ' + message, border_style="green", style="green", expand=False)
+        return Panel('[' + type.upper() + '] ' + message, title=None, title_align="left", subtitle="↓", subtitle_align="left", border_style="repr.%s" % type, highlight=True, padding=1)
 
-    print(get_panel(type, message))
+    get_console().print(get_panel(type, message))
 
-# APPLICATION WELCOME MESSAGE
-def printBanner():
-    WELCOME_MESSAGE = """ 
-
+def print_banner():
+    """
+    Application Banner
+    """
+    REMARKS = """ 
+# Remarks:
+1. Chat admin privileges are required to do that in the specified chat (for example, to send a message in a channel which is not yours).
+1. "A wait of n seconds is required (caused by InviteToChannelRequest)" is a known problem that caused by the limitation of the telegram for clients who act like a bot.
+1. You need to have the target group ID (It should be something similar to username).
+"""
+    WELCOME_MESSAGE = """
                          ██████╗██████╗  █████╗ ██╗    ██╗██╗     ██╗███╗   ██╗ ██████╗                          
                         ██╔════╝██╔══██╗██╔══██╗██║    ██║██║     ██║████╗  ██║██╔════╝                          
                         ██║     ██████╔╝███████║██║ █╗ ██║██║     ██║██╔██╗ ██║██║  ███╗                         
                         ██║     ██╔══██╗██╔══██║██║███╗██║██║     ██║██║╚██╗██║██║   ██║                         
                         ╚██████╗██║  ██║██║  ██║╚███╔███╔╝███████╗██║██║ ╚████║╚██████╔╝                         
-                        ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝ ╚══╝╚══╝ ╚══════╝╚═╝╚═╝  ╚═══╝ ╚═════╝                          
+                         ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝ ╚══╝╚══╝ ╚══════╝╚═╝╚═╝  ╚═══╝ ╚═════╝                          
                                                                                                                 
      ██████╗ ██████╗  ██████╗ ██╗   ██╗██████╗     ███╗   ███╗███████╗███╗   ███╗██████╗ ███████╗██████╗ ███████╗
     ██╔════╝ ██╔══██╗██╔═══██╗██║   ██║██╔══██╗    ████╗ ████║██╔════╝████╗ ████║██╔══██╗██╔════╝██╔══██╗██╔════╝
     ██║  ███╗██████╔╝██║   ██║██║   ██║██████╔╝    ██╔████╔██║█████╗  ██╔████╔██║██████╔╝█████╗  ██████╔╝███████╗
     ██║   ██║██╔══██╗██║   ██║██║   ██║██╔═══╝     ██║╚██╔╝██║██╔══╝  ██║╚██╔╝██║██╔══██╗██╔══╝  ██╔══██╗╚════██║
     ╚██████╔╝██║  ██║╚██████╔╝╚██████╔╝██║         ██║ ╚═╝ ██║███████╗██║ ╚═╝ ██║██████╔╝███████╗██║  ██║███████║
-    ╚═════╝ ╚═╝  ╚═╝ ╚═════╝  ╚═════╝ ╚═╝         ╚═╝     ╚═╝╚══════╝╚═╝     ╚═╝╚═════╝ ╚══════╝╚═╝  ╚═╝╚══════
+     ╚═════╝ ╚═╝  ╚═╝ ╚═════╝  ╚═════╝ ╚═╝         ╚═╝     ╚═╝╚══════╝╚═╝     ╚═╝╚═════╝ ╚══════╝╚═╝  ╚═╝╚══════
                                                                                                                 
     This application crawl clients groups and channels to add their members to the target group.
-    Version: %s
+    Version: [repr.info]%s[/repr.info]
     Usage: - Please answer the questions!
-           - You can use CTRL+C to skip the client.
-    Copyright (c) 2018 MJHP-ME
-    """
+           - Use CTRL+C to skip the client.
+    Copyright [repr.info](c) 2018 MJHP-ME[/repr.info]
+"""
     current_version = '1.1.6'
-    log('success', WELCOME_MESSAGE % current_version)
+    get_console().print(Panel(Align.center(WELCOME_MESSAGE % current_version), highlight=True, style="repr.success"))
+    get_console().print(Padding(Markdown(REMARKS), style="", pad=(0, 4, 0, 4)), highlight=True, style="repr.text")
 
 def main():
     CONFIGURATION_FILE_NAME = 'clients.json'
@@ -139,12 +171,12 @@ def main():
     # You can set up as many clients as you want
     while True:
         if not first_run:
-            want_to_add_more_client = get_env('TG_WANTED_TO_ADD_MORE_CLIENT', 'Would you like to add more clients? (y/n): ') == 'y'
+            want_to_add_more_client = get_env('TG_WANTED_TO_ADD_MORE_CLIENT', 'Would you like to add more clients? (y/N): ') == 'y'
         if not want_to_add_more_client:
             break
         if first_run:
-            log('warning', 'To skip this step, press (n) if you have already added clients and logged in with them.')
-            are_you_sure = get_env('TG_ARE_YOU_SURE', 'Do you want to add client? (y/n) ') == 'y'
+            log('warning', 'If press (y), the old cached clients will be unreachable! \n[INFO] To skip this step, press (n) if you have already added clients and logged in with them.')
+            are_you_sure = get_env('TG_ARE_YOU_SURE', 'Do you want to add client? (y/N) ') == 'y'
         if not are_you_sure:
             break
         current_session_name = get_env('TG_CURRENR_SESSION_NAME', 'Enter session name (<your_name>): ')
@@ -160,7 +192,7 @@ def main():
         with open(CONFIGURATION_FILE_NAME) as json_file: # Get clients values from file
             data[CONFIGURATION_CLIENTS_SECTION_NAME] = json.load(json_file)[CONFIGURATION_CLIENTS_SECTION_NAME]
 
-    if get_env('TG_UPDATE_API_CONFIGURATIONS', 'Do you want to update API configurations? (y/n) ') == 'y':
+    if get_env('TG_UPDATE_API_CONFIGURATIONS', 'Do you want to update API configurations? (y/N) ') == 'y':
         API_ID = get_env('TG_API_ID', 'Enter your API ID: ', int, isPassword=True)
         API_HASH = get_env('TG_API_HASH', 'Enter your API hash: ', isPassword=True)
         data[CONFIGURATION_API_SECTION_NAME] = {
@@ -174,7 +206,7 @@ def main():
             API_ID = data[CONFIGURATION_API_SECTION_NAME][CONFIGURATION_API_API_ID_SECTION_NAME]
             API_HASH = data[CONFIGURATION_API_SECTION_NAME][CONFIGURATION_API_API_HASH_SECTION_NAME]
 
-    if get_env('TG_INVITE_GROUP_ID', 'Do you want to update the group ID (will be used to invite users to it)? (y/n) ') == 'y':
+    if get_env('TG_INVITE_GROUP_ID', 'Do you want to update the group ID (will be used to invite users to it)? (y/N) ') == 'y':
         INVITE_TO_THIS_GROUP_ID = get_env('TG_INVITE_GROUP_ID', 'Enter ID/USERNAME of group you want to add members to it: ')
         data[CONFIGURATION_GROUP_SECTION_NAME] = {
             CONFIGURATION_GROUP_INVITE_TO_THIS_GROUP_SECTION_NAME: INVITE_TO_THIS_GROUP_ID
@@ -185,9 +217,9 @@ def main():
             data[CONFIGURATION_GROUP_SECTION_NAME] = json.load(json_file)[CONFIGURATION_GROUP_SECTION_NAME]
             INVITE_TO_THIS_GROUP_ID = data[CONFIGURATION_GROUP_SECTION_NAME][CONFIGURATION_GROUP_INVITE_TO_THIS_GROUP_SECTION_NAME]
 
-    if get_env('TG_WANT_TO_USE_PROXY', 'Do you want to use proxy? (y/n) ') == 'y':
+    if get_env('TG_WANT_TO_USE_PROXY', 'Do you want to use proxy? (y/N) ') == 'y':
         want_to_use_proxy = True
-        use_old_proxy_settings = get_env('TG_PROXY_USE_OLD', 'Do you want to use old proxy settings? (y/n) ') == 'y'
+        use_old_proxy_settings = get_env('TG_PROXY_USE_OLD', 'Do you want to use old proxy settings? (y/N) ') == 'y'
         if not use_old_proxy_settings:
             if get_env('TG_PROXY_PROTOCOL', 'Enter the protocol? (HTTP/SOCKS5) ') == 'HTTP':
                 protocol = socks.HTTP
@@ -230,7 +262,7 @@ def main():
     for client in clients:
         log('info', 'Current session: %s' % (client.session.filename))
         # In some cases, a client may wish to skip a session
-        if get_env('TG_WANT_TO_USE_THIS_CLIENT', 'Do you want to use this client? (y/n) ') == 'n':
+        if get_env('TG_WANT_TO_USE_THIS_CLIENT', 'Do you want to use this client? (Y/n) ') == 'n':
             continue
         else:
             # Start client
@@ -321,12 +353,12 @@ def main():
 
 if __name__ == '__main__':
     try:
-        printBanner()
+        print_banner()
         try:
             main()
         except Exception as e:
             log('error', '%s' % e)
     except KeyboardInterrupt as k:
-        console = Console()
-        console.print('\nBye :)', style="green")
+        print("\n")
+        log('info', 'Bye :)')
         sys.exit(0)
