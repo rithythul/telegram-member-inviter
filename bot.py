@@ -20,6 +20,7 @@ from telethon import TelegramClient, events, sync
 from telethon.tl.functions.channels import GetParticipantsRequest
 from telethon.tl.functions.channels import InviteToChannelRequest
 from telethon.tl.types import ChannelParticipantsSearch
+from telethon.errors import ChatAdminRequiredError, FloodWaitError
 
 class GracefulInterruptHandler(object):
     """Handle key interupt
@@ -155,10 +156,6 @@ def main():
     CONFIGURATION_GROUP_INVITE_TO_THIS_GROUP_SECTION_NAME = 'group_id_to_invite'
     TELEGRAM_LIMITATION_TO_INVITE_USER_BY_CLIENT = 999
 
-    # Default limit and offset to get channel participants.
-    offset = 0
-    limit = 100
-
     data = {}  
     data[CONFIGURATION_CLIENTS_SECTION_NAME] = []  
     first_run = True
@@ -259,16 +256,11 @@ def main():
                 api_hash=API_HASH
             ))
 
-    for client in clients:
-        log('info', 'Current session: %s' % (client.session.filename))
-        # In some cases, a client may wish to skip a session
-        if get_env('TG_WANT_TO_USE_THIS_CLIENT', 'Do you want to use this client? (Y/n) ') == 'n':
-            continue
-        else:
-            # Start client
-            log('info', 'Trying to start client')
-            client.start()
-            log('success', 'Successfuly Logged in as: %s' % (client.session.filename))
+    def handler(client, offset, limit):
+        # Start client
+        log('info', 'Trying to start client')
+        client.start()
+        log('success', 'Successfuly Logged in as: %s' % (client.session.filename))
         client_channels_or_groups_id = []
         count_of_invited_user_by_this_client = 0
         # Fetching all the dialogs (conversations you have open)
@@ -281,16 +273,14 @@ def main():
                 continue
             client_channels_or_groups_id.append(dialog.id)
 
+        log('success', 'Successfully collected "%s" groups or channels to crawling their members' % len(client_channels_or_groups_id))
         with GracefulInterruptHandler() as interrupt_handler:
             for client_or_channel_id in client_channels_or_groups_id:
                 if interrupt_handler.interrupted:
-                    log('info', 'Trying to change client')
+                    log('info', 'CTRL+C detected! Trying to change client')
                     # Stop current client
-                    log('info', 'Trying to stop client')
                     client.disconnect()
                     break
-                # Depricated. reset user array in each itteration
-                all_users_id_also_channel_creator_id_except_admins_and_bots = []
                 # Check telegram limitation to inive users by each client
                 if count_of_invited_user_by_this_client > TELEGRAM_LIMITATION_TO_INVITE_USER_BY_CLIENT:
                     log('info', 'Trying to stop client')
@@ -302,9 +292,8 @@ def main():
                 # Collect all users except admins into the array.
                 while True:
                     if interrupt_handler.interrupted:
-                        log('info', 'Trying to change client')
+                        log('info', 'CTRL+C detected! Trying to change client')
                         # Stop current client
-                        log('info', 'Trying to stop client')
                         client.disconnect()
                         break
                     # Check telegram limitation to inive users by each client
@@ -350,16 +339,34 @@ def main():
             log('info', 'Trying to stop client')
             client.disconnect()
 
+    for client in clients:
+        # Default limit and offset to get channel participants.
+        offset = 0
+        limit = 100
+        log('info', 'Current session: %s' % (client.session.filename))
+        # In some cases, a client may wish to skip a session
+        if get_env('TG_WANT_TO_USE_THIS_CLIENT', 'Do you want to use this client? (Y/n) ') == 'n':
+            continue
+        else:
+            try:
+                handler(client, offset, limit)
+            except(ChatAdminRequiredError, FloodWaitError) as e:
+                log('error', '%s' % e)
+                log('info', 'Trying to change client')
+                continue
+        
+
 
 if __name__ == '__main__':
     try:
-        print_banner()
         try:
+            print_banner()
             main()
-        except Exception as e:
-            log('error', '%s' % e)
-            get_env('', 'Press Enter to close ...')
-    except KeyboardInterrupt as k:
-        print("\n")
-        log('info', 'Bye :)')
-        sys.exit(0)
+        except KeyboardInterrupt as k:
+            print("\n")
+            log('info', 'Bye :)')
+    except Exception as e:
+        log('error', '%s' % e)
+        get_env('', 'Press Enter to close ...')
+    
+    sys.exit(0)
