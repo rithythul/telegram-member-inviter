@@ -2,7 +2,7 @@
 # With this script, members of all clients will be added to the target group.
 import os
 import sys
-import time
+from time import sleep
 import json
 import signal
 import socks
@@ -70,7 +70,7 @@ def get_env(name, message, cast=str, isPassword=False):
             return cast(value)
         except ValueError as error:
             log('warning', 'Should be type of ' + str(cast.__name__) + '.')
-            time.sleep(1)
+            sleep(1)
 
 def get_console():
     class Highlighter(RegexHighlighter):
@@ -358,6 +358,7 @@ if __name__ == '__main__':
             main()
         except Exception as e:
             log('error', '%s' % e)
+            get_env('', 'Press Enter to close ...')
     except KeyboardInterrupt as k:
         print("\n")
         log('info', 'Bye :)')
