@@ -339,20 +339,26 @@ def main():
             log('info', 'Trying to stop client')
             client.disconnect()
 
+    current_index = 0
     for client in clients:
         # Default limit and offset to get channel participants.
         offset = 0
         limit = 100
-        log('info', 'Current session: %s' % (client.session.filename))
+        current_index = current_index + 1
+        log('warning', 'Current session: %s' % (client.session.filename))
         # In some cases, a client may wish to skip a session
         if get_env('TG_WANT_TO_USE_THIS_CLIENT', 'Do you want to use this client? (Y/n) ') == 'n':
             continue
         else:
             try:
                 handler(client, offset, limit)
-            except(ChatAdminRequiredError, FloodWaitError) as e:
-                log('error', '%s' % e)
-                log('info', 'Trying to change client')
+            except(ChatAdminRequiredError, FloodWaitError) as error:
+                log('error', '%s' % error)
+                if (current_index == len(clients)):
+                    log('info', 'No more client')
+                else:
+                    log('info', 'Trying to change client')
+                client.disconnect()
                 continue
         
 
@@ -362,6 +368,7 @@ if __name__ == '__main__':
         try:
             print_banner()
             main()
+            get_env('', 'Press Enter to close ...')
         except KeyboardInterrupt as k:
             print("\n")
             log('info', 'Bye :)')
