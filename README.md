@@ -1,8 +1,12 @@
 # Telegram User Inviter BOT
 
-![Terminal Screenshot](/assets/images/next.png)
-
 This program can crawl all users inside the client groups and add them to the target group. Clients should have intended permissions to add members to the target group.
+
+- Windows
+![Terminal Screenshot](/assets/images/next.windows.png)
+
+- Linux
+![Terminal Screenshot](/assets/images/next.linux.png)
 
 # Requirements
 
