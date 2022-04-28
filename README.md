@@ -8,6 +8,9 @@ This program can crawl all users inside the client groups and add them to the ta
 - Linux
 ![Terminal Screenshot](/assets/images/next.linux.png)
 
+- Mac
+![Terminal Screenshot](/assets/images/next.mac.png)
+
 # Requirements
 
 ```shell
