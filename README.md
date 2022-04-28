@@ -1,4 +1,4 @@
-# Telegram User Inviter BOT
+# Telegram Client to Invite users
 
 This program can crawl all users inside the client groups and add them to the target group. Clients should have intended permissions to add members to the target group.
 
