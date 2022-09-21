@@ -1,3 +1,5 @@
+# pylint: disable=line-too-long
+# pylint: disable=missing-module-docstring
 import os
 import sys
 from time import sleep
@@ -13,9 +15,26 @@ from rich.panel import Panel
 from rich.padding import Padding
 from rich.markdown import Markdown
 
+# pylint: disable=unused-import
 from telethon import TelegramClient, events, sync
+
+# pylint: enable=unused-import
 from telethon.tl import functions
 from telethon.errors import ChatAdminRequiredError, FloodWaitError
+
+CONFIGURATION_FILE_NAME = "clients.json"
+CONFIGURATION_CLIENTS_SECTION_NAME = "clients"
+CONFIGURATION_CLIENTS_SESSION_SECTION_NAME = "session_name"
+CONFIGURATION_API_SECTION_NAME = "API"
+CONFIGURATION_API_API_ID_SECTION_NAME = "API_ID"
+CONFIGURATION_API_API_HASH_SECTION_NAME = "API_HASH"
+CONFIGURATION_GROUP_SECTION_NAME = "group"
+CONFIGURATION_PROXY_SECTION_NAME = "proxy"
+CONFIGURATION_PROXY_PROTOCOL_NAME = "protocol"
+CONFIGURATION_PROXY_HOST_NAME = "host"
+CONFIGURATION_PROXY_PORT_NAME = "port"
+CONFIGURATION_GROUP_INVITE_TO_THIS_GROUP_SECTION_NAME = "group_id_to_invite"
+TELEGRAM_LIMITATION_TO_INVITE_USER_BY_CLIENT = 999
 
 
 def get_env(name, message, cast=str, is_password=False):
@@ -42,6 +61,7 @@ def get_env(name, message, cast=str, is_password=False):
             sleep(1)
 
 
+# pylint: disable=too-few-public-methods
 def get_console():
     """Create and configure default console output formatter
 
@@ -50,7 +70,7 @@ def get_console():
     """
 
     class Highlighter(RegexHighlighter):
-        """Apply style to matched text with defined regexes."""
+        """Apply style to matched text with defined regexps."""
 
         base_style = "repr."
         highlights = [
@@ -76,6 +96,9 @@ def get_console():
     )
     console = Console(highlighter=Highlighter(), theme=theme)
     return console
+
+
+# pylint: enable=too-few-public-methods
 
 
 def log(panel_type, message):
@@ -107,13 +130,13 @@ def log(panel_type, message):
 def print_banner():
     """Application Banner"""
 
-    REMARKS = """
+    remarks_message = """
 # Remarks:
 1. Chat admin privileges are required to do that in the specified chat (for example, to send a message in a channel which is not yours).
 1. "A wait of n seconds is required (caused by InviteToChannelRequest)" is a known problem that caused by the limitation of the telegram for clients who act like a bot.
 1. You need to have the target group ID (It should be something similar to username).
 """
-    WELCOME_MESSAGE = """
+    welcome_message = """
                          ██████╗██████╗  █████╗ ██╗    ██╗██╗     ██╗███╗   ██╗ ██████╗                          
                         ██╔════╝██╔══██╗██╔══██╗██║    ██║██║     ██║████╗  ██║██╔════╝                          
                         ██║     ██████╔╝███████║██║ █╗ ██║██║     ██║██╔██╗ ██║██║  ███╗                         
@@ -129,42 +152,29 @@ def print_banner():
      ╚═════╝ ╚═╝  ╚═╝ ╚═════╝  ╚═════╝ ╚═╝         ╚═╝     ╚═╝╚══════╝╚═╝     ╚═╝╚═════╝ ╚══════╝╚═╝  ╚═╝╚══════
                                                                                                                 
     This application crawl clients groups and channels to add their members to the target group.
-    Build: [repr.info]%s[/repr.info]
+    Build: [repr.symbol]<VERSION>[/repr.symbol]
     Usage: 
         - Answer the questions.
-        - [repr.warning](Y/n)[/repr.warning]: Y is default.
-        - [repr.warning](y/N)[/repr.warning]: N is default.
-    Copyright [repr.info](c) 2018 MJHP-ME[/repr.info]
+        - [repr.symbol](Y/n)[/repr.symbol]: Y is default.
+        - [repr.symbol](y/N)[/repr.symbol]: N is default.
+    Copyright [repr.symbol](c) 2018 MJHP-ME[/repr.symbol]
 """
-    current_version = "1.1.8"
     get_console().print(
         Panel(
-            Align.center(WELCOME_MESSAGE % current_version),
+            Align.center(welcome_message),
             highlight=True,
             style="repr.success",
         )
     )
     get_console().print(
-        Padding(Markdown(REMARKS), style="", pad=(0, 4, 0, 4)),
+        Padding(Markdown(remarks_message), style="", pad=(0, 4, 0, 4)),
         highlight=True,
         style="repr.text",
     )
 
 
 def main():
-    CONFIGURATION_FILE_NAME = "clients.json"
-    CONFIGURATION_CLIENTS_SECTION_NAME = "clients"
-    CONFIGURATION_CLIENTS_SESSION_SECTION_NAME = "session_name"
-    CONFIGURATION_API_SECTION_NAME = "API"
-    CONFIGURATION_API_API_ID_SECTION_NAME = "API_ID"
-    CONFIGURATION_API_API_HASH_SECTION_NAME = "API_HASH"
-    CONFIGURATION_GROUP_SECTION_NAME = "group"
-    CONFIGURATION_PROXY_SECTION_NAME = "proxy"
-    CONFIGURATION_PROXY_PROTOCOL_NAME = "protocol"
-    CONFIGURATION_PROXY_HOST_NAME = "host"
-    CONFIGURATION_PROXY_PORT_NAME = "port"
-    CONFIGURATION_GROUP_INVITE_TO_THIS_GROUP_SECTION_NAME = "group_id_to_invite"
-    TELEGRAM_LIMITATION_TO_INVITE_USER_BY_CLIENT = 999
+    """Main function."""
 
     data = {}
     data[CONFIGURATION_CLIENTS_SECTION_NAME] = []
@@ -180,7 +190,7 @@ def main():
         if not first_run:
             want_to_add_more_client = (
                 get_env(
-                    "TG_WANTED_TO_ADD_MORE_CLIENT",
+                    "",
                     "Would you like to add more clients? (y/N): ",
                 )
                 == "y"
@@ -193,14 +203,10 @@ def main():
                 "If press (y), the old cached clients will be unreachable! \
                 \n[INFO] To skip this step, press (n) if you have already added clients and logged in with them.",
             )
-            are_you_sure = (
-                get_env("TG_ARE_YOU_SURE", "Do you want to add client? (y/N) ") == "y"
-            )
+            are_you_sure = get_env("", "Do you want to add client? (y/N) ") == "y"
         if not are_you_sure:
             break
-        current_session_name = get_env(
-            "TG_CURRENR_SESSION_NAME", "Enter session name (<your_name>): "
-        )
+        current_session_name = get_env("", "Enter session name (<your_name>): ")
         data[CONFIGURATION_CLIENTS_SECTION_NAME].append(
             {CONFIGURATION_CLIENTS_SESSION_SECTION_NAME: current_session_name}
         )
@@ -219,16 +225,16 @@ def main():
 
     if (
         get_env(
-            "TG_UPDATE_API_CONFIGURATIONS",
+            "",
             "Do you want to update API configurations? (y/N) ",
         )
         == "y"
     ):
-        API_ID = get_env("TG_API_ID", "Enter your API ID: ", int, is_password=True)
-        API_HASH = get_env("TG_API_HASH", "Enter your API hash: ", is_password=True)
+        api_id = get_env("TG_API_ID", "Enter your API ID: ", int, is_password=True)
+        api_hash = get_env("TG_API_HASH", "Enter your API hash: ", is_password=True)
         data[CONFIGURATION_API_SECTION_NAME] = {
-            CONFIGURATION_API_API_ID_SECTION_NAME: API_ID,
-            CONFIGURATION_API_API_HASH_SECTION_NAME: API_HASH,
+            CONFIGURATION_API_API_ID_SECTION_NAME: api_id,
+            CONFIGURATION_API_API_HASH_SECTION_NAME: api_hash,
         }
         anythings_to_update = True
     else:
@@ -238,26 +244,26 @@ def main():
             data[CONFIGURATION_API_SECTION_NAME] = json.load(json_file)[
                 CONFIGURATION_API_SECTION_NAME
             ]
-            API_ID = data[CONFIGURATION_API_SECTION_NAME][
+            api_id = data[CONFIGURATION_API_SECTION_NAME][
                 CONFIGURATION_API_API_ID_SECTION_NAME
             ]
-            API_HASH = data[CONFIGURATION_API_SECTION_NAME][
+            api_hash = data[CONFIGURATION_API_SECTION_NAME][
                 CONFIGURATION_API_API_HASH_SECTION_NAME
             ]
 
     if (
         get_env(
-            "TG_INVITE_GROUP_ID",
+            "",
             "Do you want to update the group ID (will be used to invite users to it)? (y/N) ",
         )
         == "y"
     ):
-        INVITE_TO_THIS_GROUP_ID = get_env(
-            "TG_INVITE_GROUP_ID",
+        group_id_to_invite = get_env(
+            "",
             "Enter ID/USERNAME of group you want to add members to it: ",
         )
         data[CONFIGURATION_GROUP_SECTION_NAME] = {
-            CONFIGURATION_GROUP_INVITE_TO_THIS_GROUP_SECTION_NAME: INVITE_TO_THIS_GROUP_ID
+            CONFIGURATION_GROUP_INVITE_TO_THIS_GROUP_SECTION_NAME: group_id_to_invite
         }
         anythings_to_update = True
     else:
@@ -267,21 +273,17 @@ def main():
             data[CONFIGURATION_GROUP_SECTION_NAME] = json.load(json_file)[
                 CONFIGURATION_GROUP_SECTION_NAME
             ]
-            INVITE_TO_THIS_GROUP_ID = data[CONFIGURATION_GROUP_SECTION_NAME][
+            group_id_to_invite = data[CONFIGURATION_GROUP_SECTION_NAME][
                 CONFIGURATION_GROUP_INVITE_TO_THIS_GROUP_SECTION_NAME
             ]
 
-    if get_env("TG_WANT_TO_USE_PROXY", "Do you want to use proxy? (y/N) ") == "y":
+    if get_env("", "Do you want to use proxy? (y/N) ") == "y":
         want_to_use_proxy = True
         use_old_proxy_settings = (
-            get_env("TG_PROXY_USE_OLD", "Do you want to use old proxy settings? (y/N) ")
-            == "y"
+            get_env("", "Do you want to use old proxy settings? (y/N) ") == "y"
         )
         if not use_old_proxy_settings:
-            if (
-                get_env("TG_PROXY_PROTOCOL", "Enter the protocol? (HTTP/SOCKS5) ")
-                == "HTTP"
-            ):
+            if get_env("", "Enter the protocol? (HTTP/SOCKS5) ") == "HTTP":
                 protocol = socks.HTTP
             else:
                 protocol = socks.SOCKS5
@@ -319,8 +321,8 @@ def main():
             clients.append(
                 TelegramClient(
                     session=client[CONFIGURATION_CLIENTS_SESSION_SECTION_NAME],
-                    api_id=API_ID,
-                    api_hash=API_HASH,
+                    api_id=api_id,
+                    api_hash=api_hash,
                     proxy=(protocol, host, port),
                 )
             )
@@ -328,8 +330,8 @@ def main():
             clients.append(
                 TelegramClient(
                     session=client[CONFIGURATION_CLIENTS_SESSION_SECTION_NAME],
-                    api_id=API_ID,
-                    api_hash=API_HASH,
+                    api_id=api_id,
+                    api_hash=api_hash,
                 )
             )
 
@@ -337,7 +339,7 @@ def main():
         # Start client
         log("info", "Trying to start client")
         client.start()
-        log("success", f"Successfully Logged in as \"{client.session.filename}\"")
+        log("success", f'Successfully Logged in as "{client.session.filename}"')
         client_channels_or_groups_id = {}
         count_of_invited_user_by_this_client = 0
         # Fetching all the dialogs (conversations you have open)
@@ -367,7 +369,9 @@ def main():
                 break
 
             # Reset the array
-            user_ids = [] # All user ids also channel creator ids except admins and bots
+            user_ids = (
+                []
+            )  # All user ids also channel creator ids except admins and bots
             participants = client.iter_participants(group_or_channel_id, 500)
 
             for participant in participants:
@@ -378,32 +382,29 @@ def main():
                     continue
                 if participant.deleted:
                     continue
-                user_ids.append(
-                    participant.id
-                )
-            channel_name = title.split(':')[0] or None
+                user_ids.append(participant.id)
+            channel_name = title.split(":")[0] or None
             log(
                 "warning",
-                f"Try to add {len(user_ids)} users from \"{channel_name}\"",
+                f'Try to add {len(user_ids)} users from "{channel_name}"',
             )
-            action =  get_env(
-                "TG_ARE_YOU_SURE_THIS_CHANNEL", f"Do you want to add from \"{channel_name}\" channel? (Y/n) (s to skip this client) "
+            action = get_env(
+                "",
+                f'Do you want to add from "{channel_name}" channel? (Y/n) (s to skip this client) ',
             )
-            if ( action == "n" ):
+            if action == "n":
                 continue
-            if ( action == "s" ):
+            if action == "s":
                 break
 
             client_add_response = client(
                 functions.channels.InviteToChannelRequest(
-                    INVITE_TO_THIS_GROUP_ID,
+                    group_id_to_invite,
                     user_ids,
                 )
             )
             log("success", f"{len(client_add_response.users)} users invited")
-            count_of_invited_user_by_this_client += len(
-                client_add_response.users
-            )
+            count_of_invited_user_by_this_client += len(client_add_response.users)
         # Stop current client
         log("info", "Trying to stop client")
         client.disconnect()
@@ -413,12 +414,7 @@ def main():
         current_index = current_index + 1
         log("warning", f"Current session: {client.session.filename}")
         # In some cases, a client may wish to skip a session
-        if (
-            get_env(
-                "TG_WANT_TO_USE_THIS_CLIENT", "Do you want to use this client? (Y/n) "
-            )
-            == "n"
-        ):
+        if get_env("", "Do you want to use this client? (Y/n) ") == "n":
             continue
 
         try:
@@ -442,7 +438,9 @@ if __name__ == "__main__":
         except KeyboardInterrupt:
             print("\n")
             log("info", "Goodbye ...")
+    # pylint: disable=broad-except
     except Exception as main_err:
+        # pylint: enable=broad-except
         log("error", f"{main_err}")
         get_env("", "Press Enter to close ...")
 
