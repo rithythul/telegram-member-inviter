@@ -17,14 +17,11 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
         include:
           - os: ubuntu-latest
-            ls: |
-              ls -la
+            ls: ls -la dist
           - os: macos-latest
-            ls: |
-              ls -la
+            ls: ls -la dist
           - os: windows-latest
-            ls: |
-              ls
+            ls: ls dist
 
     steps:
       - uses: actions/checkout@v3
@@ -41,5 +38,5 @@ jobs:
           python build.py
       - name: Show result
         run: |
-          ${{ matrix.ls }} dist
+          ${{ matrix.ls }}
 
