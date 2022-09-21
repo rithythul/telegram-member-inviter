@@ -2,11 +2,8 @@ name: Build binary file
 
 on: 
   push:
-    branches:
-      - 'main'
-    paths:
-      - '**.py'
-      - '**.yml'
+    tags:
+      - v*
 
 jobs:
   build:
