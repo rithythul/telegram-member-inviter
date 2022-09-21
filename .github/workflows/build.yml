@@ -18,10 +18,13 @@ jobs:
         include:
           - os: ubuntu-latest
             ls: ls -la dist
+            file-postfix: linux86_64
           - os: macos-latest
             ls: ls -la dist
+            file-postfix: macos86_64
           - os: windows-latest
             ls: ls dist
+            file-postfix: win10.exe
 
     steps:
       - uses: actions/checkout@v3
@@ -40,10 +43,9 @@ jobs:
         run: |
           ${{ matrix.ls }}
       - name: Upload binary results
-        # if: matrix.os == 'macos-latest'
         uses: actions/upload-artifact@v3
         with:
-          name: telegram-member-inviter-${{ matrix.os }}
+          name: telegram-member-inviter-${{ matrix.file-postfix }}
           path: |
             dist/telegram-member-inviter
             dist/telegram-member-inviter.*
