@@ -44,5 +44,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: telegram-member-inviter-${{ matrix.os }}
-          path: junit/test-results-${{ matrix.python-version }}.xml
+          path: |
+            dist/telegram-member-inviter
+            dist/telegram-member-inviter.*
 
