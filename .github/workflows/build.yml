@@ -29,3 +29,7 @@ jobs:
       - name: Build single binary
         run: |
           python build.py
+      - name: Show result
+        run: |
+          ls -la dist
+
