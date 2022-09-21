@@ -2,7 +2,6 @@ import os
 import sys
 from time import sleep
 import json
-import signal
 import socks
 
 from rich.align import Align
@@ -15,49 +14,8 @@ from rich.padding import Padding
 from rich.markdown import Markdown
 
 from telethon import TelegramClient, events, sync
-from telethon.tl.functions.channels import GetParticipantsRequest
-from telethon.tl.functions.channels import InviteToChannelRequest
-from telethon.tl.types import ChannelParticipantsSearch
+from telethon.tl import functions
 from telethon.errors import ChatAdminRequiredError, FloodWaitError
-
-
-class GracefulInterruptHandler(object):
-    """Handle key interupt
-
-    CTRL+C
-    """
-
-    def __init__(self, sig=signal.SIGINT):
-        self.sig = sig
-
-    def __enter__(self):
-
-        self.interrupted = False
-        self.released = False
-
-        self.original_handler = signal.getsignal(self.sig)
-
-        def handler(signum, frame):
-            self.release()
-            self.interrupted = True
-
-        signal.signal(self.sig, handler)
-
-        return self
-
-    def __exit__(self, type, value, tb):
-        self.release()
-
-    def release(self):
-
-        if self.released:
-            return False
-
-        signal.signal(self.sig, self.original_handler)
-
-        self.released = True
-
-        return True
 
 
 def get_env(name, message, cast=str, is_password=False):
@@ -149,7 +107,7 @@ def log(panel_type, message):
 def print_banner():
     """Application Banner"""
 
-    REMARKS = """ 
+    REMARKS = """
 # Remarks:
 1. Chat admin privileges are required to do that in the specified chat (for example, to send a message in a channel which is not yours).
 1. "A wait of n seconds is required (caused by InviteToChannelRequest)" is a known problem that caused by the limitation of the telegram for clients who act like a bot.
@@ -171,11 +129,11 @@ def print_banner():
      ╚═════╝ ╚═╝  ╚═╝ ╚═════╝  ╚═════╝ ╚═╝         ╚═╝     ╚═╝╚══════╝╚═╝     ╚═╝╚═════╝ ╚══════╝╚═╝  ╚═╝╚══════
                                                                                                                 
     This application crawl clients groups and channels to add their members to the target group.
-    Version: [repr.info]%s[/repr.info]
+    Build: [repr.info]%s[/repr.info]
     Usage: 
         - Answer the questions.
-        - (Y/n): Y is default.
-        - (y/N): N is default.
+        - [repr.warning](Y/n)[/repr.warning]: Y is default.
+        - [repr.warning](y/N)[/repr.warning]: N is default.
     Copyright [repr.info](c) 2018 MJHP-ME[/repr.info]
 """
     current_version = "1.1.8"
@@ -375,129 +333,83 @@ def main():
                 )
             )
 
-    def handler(client, offset, limit):
+    def handler(client: TelegramClient):
         # Start client
         log("info", "Trying to start client")
         client.start()
-        log("success", f"Successfuly Logged in as: {client.session.filename}")
-        client_channels_or_groups_id = []
+        log("success", f"Successfully Logged in as \"{client.session.filename}\"")
+        client_channels_or_groups_id = {}
         count_of_invited_user_by_this_client = 0
         # Fetching all the dialogs (conversations you have open)
-        for dialog in client.get_dialogs():
+        for dialog in client.iter_dialogs():
             if dialog.is_user:
                 continue
-            if not dialog.is_channel:
+            if not dialog.is_channel or not dialog.is_group:
                 continue
-            if not dialog.is_group:
-                continue
-            client_channels_or_groups_id.append(dialog.id)
+            client_channels_or_groups_id[f"{dialog.name}:{dialog.id}"] = dialog.id
 
         log(
             "success",
             f'Successfully collected "{len(client_channels_or_groups_id)}" groups or channels to crawling their members',
         )
-        with GracefulInterruptHandler() as interrupt_handler:
-            for client_or_channel_id in client_channels_or_groups_id:
-                if interrupt_handler.interrupted:
-                    log("info", "CTRL+C detected! Trying to change client")
-                    # Stop current client
-                    client.disconnect()
-                    break
-                # Check telegram limitation to inive users by each client
-                if (
-                    count_of_invited_user_by_this_client
-                    > TELEGRAM_LIMITATION_TO_INVITE_USER_BY_CLIENT
-                ):
-                    log("info", "Trying to stop client")
-                    client.disconnect()
-                    log(
-                        "info",
-                        "Trying to change client because: telegram limitation for this client was applied",
-                    )
-                    break
+        for title, group_or_channel_id in client_channels_or_groups_id.items():
+            # Check telegram limitation to invite users by each client
+            if (
+                count_of_invited_user_by_this_client
+                > TELEGRAM_LIMITATION_TO_INVITE_USER_BY_CLIENT
+            ):
+                log("info", "Trying to stop client")
+                client.disconnect()
+                log(
+                    "info",
+                    "Trying to change client because: telegram limitation for this client was applied",
+                )
+                break
 
-                # Collect all users except admins into the array.
-                while True:
-                    if interrupt_handler.interrupted:
-                        log("info", "CTRL+C detected! Trying to change client")
-                        # Stop current client
-                        client.disconnect()
-                        break
-                    # Check telegram limitation to inive users by each client
-                    if (
-                        count_of_invited_user_by_this_client
-                        > TELEGRAM_LIMITATION_TO_INVITE_USER_BY_CLIENT
-                    ):
-                        break
-                    # Reset the array
-                    all_users_id_also_channel_creator_id_except_admins_and_bots = []
-                    participants = client(
-                        GetParticipantsRequest(
-                            client_or_channel_id,
-                            ChannelParticipantsSearch(""),
-                            offset,
-                            limit,
-                            hash=0,
-                        )
-                    )
-                    if not participants.participants:  # All users was fetched
-                        break
-                    for participant in participants.participants:
-                        if hasattr(participant, "admin_rights"):  # If user was admin
-                            # then do not add it to array.
-                            continue
-                        # Add specific user into the array where user id was equal to the
-                        # participant.user_id.
-                        for user in participants.users:
-                            if user.id == participant.user_id:
-                                # Remove finded user from users list for better performance
-                                participants.users.remove(user)
-                                # If user was bot the remove it from list and continue
-                                if user.bot:
-                                    break
-                                if user.deleted:
-                                    break
-                                # Add finded user to the array
-                                all_users_id_also_channel_creator_id_except_admins_and_bots.append(
-                                    user.id
-                                )
-                                break
-                            # Continue to search in array to find user
-                            continue
-                    offset += len(participants.participants)
-                    # Add users to the channel
-                    log(
-                        "info",
-                        "Try to add %d users"
-                        % len(
-                            all_users_id_also_channel_creator_id_except_admins_and_bots
-                        ),
-                    )
-                    client_add_response = client(
-                        InviteToChannelRequest(
-                            INVITE_TO_THIS_GROUP_ID,
-                            all_users_id_also_channel_creator_id_except_admins_and_bots,
-                        )
-                    )
-                    log("success", f"{len(client_add_response.users)} users invited")
-                    count_of_invited_user_by_this_client += len(
-                        client_add_response.users
-                    )
-                    # Check telegram limitation to inive users by each client
-                    if (
-                        count_of_invited_user_by_this_client
-                        > TELEGRAM_LIMITATION_TO_INVITE_USER_BY_CLIENT
-                    ):
-                        break
-            # Stop current client
-            log("info", "Trying to stop client")
-            client.disconnect()
+            # Reset the array
+            user_ids = [] # All user ids also channel creator ids except admins and bots
+            participants = client.iter_participants(group_or_channel_id, 500)
+
+            for participant in participants:
+                if hasattr(participant, "admin_rights"):  # If user is admin
+                    # then do not add it to array.
+                    continue
+                if participant.bot:
+                    continue
+                if participant.deleted:
+                    continue
+                user_ids.append(
+                    participant.id
+                )
+            channel_name = title.split(':')[0] or None
+            log(
+                "warning",
+                f"Try to add {len(user_ids)} users from \"{channel_name}\"",
+            )
+            action =  get_env(
+                "TG_ARE_YOU_SURE_THIS_CHANNEL", f"Do you want to add from \"{channel_name}\" channel? (Y/n) (s to skip this client) "
+            )
+            if ( action == "n" ):
+                continue
+            if ( action == "s" ):
+                break
+
+            client_add_response = client(
+                functions.channels.InviteToChannelRequest(
+                    INVITE_TO_THIS_GROUP_ID,
+                    user_ids,
+                )
+            )
+            log("success", f"{len(client_add_response.users)} users invited")
+            count_of_invited_user_by_this_client += len(
+                client_add_response.users
+            )
+        # Stop current client
+        log("info", "Trying to stop client")
+        client.disconnect()
 
     current_index = 0
     for client in clients:
-        # Default limit and offset to get channel participants.
-        offset = 0
-        limit = 100
         current_index = current_index + 1
         log("warning", f"Current session: {client.session.filename}")
         # In some cases, a client may wish to skip a session
@@ -508,17 +420,17 @@ def main():
             == "n"
         ):
             continue
-        else:
-            try:
-                handler(client, offset, limit)
-            except (ChatAdminRequiredError, FloodWaitError) as handler_err:
-                log("error", f"{handler_err}")
-                if current_index == len(clients):
-                    log("info", "No more client")
-                else:
-                    log("info", "Trying to change client")
-                client.disconnect()
-                continue
+
+        try:
+            handler(client)
+        except (ChatAdminRequiredError, FloodWaitError) as handler_err:
+            log("error", f"{handler_err}")
+            if current_index == len(clients):
+                log("info", "No more client")
+            else:
+                log("info", "Trying to change client")
+            client.disconnect()
+            continue
 
 
 if __name__ == "__main__":
@@ -527,7 +439,7 @@ if __name__ == "__main__":
             print_banner()
             main()
             get_env("", "Press Enter to close ...")
-        except KeyboardInterrupt as k:
+        except KeyboardInterrupt:
             print("\n")
             log("info", "Goodbye ...")
     except Exception as main_err:
