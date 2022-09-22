@@ -152,7 +152,7 @@ def print_banner():
      ╚═════╝ ╚═╝  ╚═╝ ╚═════╝  ╚═════╝ ╚═╝         ╚═╝     ╚═╝╚══════╝╚═╝     ╚═╝╚═════╝ ╚══════╝╚═╝  ╚═╝╚══════
                                                                                                                 
     This application crawl clients groups and channels to add their members to the target group.
-    Build: [repr.symbol]<VERSION>[/repr.symbol]
+    Build: [repr.symbol]<VERSION> <PLATFORM> <BUILD_DATE>[/repr.symbol]
     Usage: 
         - Answer the questions.
         - [repr.symbol](Y/n)[/repr.symbol]: Y is default.

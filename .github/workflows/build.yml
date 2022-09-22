@@ -20,20 +20,10 @@ jobs:
         include:
           - os: ubuntu-latest
             file-postfix: linux86_64
-            vr-rep: |
-              sed -i "s/<VERSION>/$(git describe --always)/" bot.py
-              cat bot.py
           - os: macos-latest
             file-postfix: macos86_64
-            vr-rep: |
-              sed -i '.old' "s/<VERSION>/$(git describe --always)/" bot.py
-              cat bot.py
           - os: windows-latest
             file-postfix: win10.exe
-            vr-rep: |
-              $version = $(git describe --always;)
-              C:\"Program Files"\Git\usr\bin\sed.exe -i "s/<VERSION>/$version/" bot.py
-              gc bot.py
 
     steps:
       - uses: actions/checkout@v3
@@ -44,7 +34,11 @@ jobs:
           python-version: '3.10'
       - name: Replace version
         run: |
-          ${{ matrix.vr-rep }}
+          if [ "$RUNNER_OS" = "macOS" ]; then
+            MAC_SPECIFIC_ARG='.old'
+          fi
+          sed -i $MAC_SPECIFIC_ARG "s/<VERSION>/$(git describe --always)/;s/<PLATFORM>/$RUNNER_OS$RUNNER_ARCH/;s/<BUILD_DATE>/$(date)/" bot.py
+        shell: bash
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
