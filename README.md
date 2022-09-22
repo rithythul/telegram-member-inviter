@@ -1,5 +1,7 @@
 # Telegram Client to Invite users
 
+[![Build binary file](https://github.com/mjavadhpour/telegram-member-inviter/actions/workflows/build.yml/badge.svg)](https://github.com/mjavadhpour/telegram-member-inviter/actions/workflows/build.yml)
+
 This program can crawl all users inside the client groups and add them to the target group. Clients should have intended permissions to add members to the target group.
 
 - Windows
