@@ -21,17 +21,17 @@ jobs:
           - os: ubuntu-latest
             file-postfix: linux86_64
             vr-rep: |
-              sed -i "s/<VERSION>/$(git describe --tags)/" bot.py
+              sed -i "s/<VERSION>/$(git describe --always)/" bot.py
               cat bot.py
           - os: macos-latest
             file-postfix: macos86_64
             vr-rep: |
-              sed -i '.old' "s/<VERSION>/$(git describe --tags)/" bot.py
+              sed -i '.old' "s/<VERSION>/$(git describe --always)/" bot.py
               cat bot.py
           - os: windows-latest
             file-postfix: win10.exe
             vr-rep: |
-              $version = $(git describe --tags;)
+              $version = $(git describe --always;)
               C:\"Program Files"\Git\usr\bin\sed.exe -i "s/<VERSION>/$version/" bot.py
               gc bot.py
 
@@ -68,7 +68,7 @@ jobs:
       - uses: actions/checkout@v3
       - run: git fetch --prune --unshallow
       - name: Setup env
-        run: echo "BRANCH_LATEST_TAG=$(git describe --tags)" >> $GITHUB_ENV
+        run: echo "BRANCH_LATEST_TAG=$(git describe --always)" >> $GITHUB_ENV
       - name: Download all build artifacts
         uses: actions/download-artifact@v3
       - name: Automatic release

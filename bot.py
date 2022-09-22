@@ -2,7 +2,7 @@
 # pylint: disable=missing-module-docstring
 import os
 import sys
-from time import sleep
+import time
 import json
 import socks
 
@@ -58,7 +58,7 @@ def get_env(name, message, cast=str, is_password=False):
             return cast(value)
         except ValueError:
             log("warning", "Should be type of " + str(cast.__name__) + ".")
-            sleep(1)
+            time.sleep(1)
 
 
 # pylint: disable=too-few-public-methods
