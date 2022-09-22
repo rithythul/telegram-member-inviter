@@ -1,3 +1,4 @@
+import sys
 import PyInstaller.__main__
 
 PyInstaller.__main__.run([
@@ -5,6 +6,6 @@ PyInstaller.__main__.run([
     '--onefile',
     '--console',
     '-n',
-    'telegram-member-inviter',
+    f'telegram-member-inviter-{sys.platform}',
     '--clean',
 ])
