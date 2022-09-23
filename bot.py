@@ -132,7 +132,7 @@ def print_banner():
 
     remarks_message = """
 # Remarks:
-1. Chat admin privileges are required to do that in the specified chat (for example, to send a message in a channel which is not yours).
+1. Admin privileges or privilage to add member (in target group) is required for the client.
 1. "A wait of n seconds is required (caused by InviteToChannelRequest)" is a known problem that caused by the limitation of the telegram for clients who act like a bot.
 1. You need to have the target group ID (It should be something similar to username).
 """
@@ -201,12 +201,12 @@ def main():
             log(
                 "warning",
                 "If press (y), the old cached clients will be unreachable! \
-                \n[INFO] To skip this step, press (n) if you have already added clients and logged in with them.",
+                \n[INFO] If you already have the configured clients, press (n) to skip this step.",
             )
-            are_you_sure = get_env("", "Do you want to add client? (y/N) ") == "y"
+            are_you_sure = get_env("", "Do you want to configure clients? (y/N) ") == "y"
         if not are_you_sure:
             break
-        current_session_name = get_env("", "Enter session name (<your_name>): ")
+        current_session_name = get_env("", "Enter session name (<the_client_name>): ")
         data[CONFIGURATION_CLIENTS_SECTION_NAME].append(
             {CONFIGURATION_CLIENTS_SESSION_SECTION_NAME: current_session_name}
         )
@@ -254,13 +254,13 @@ def main():
     if (
         get_env(
             "",
-            "Do you want to update the group ID (will be used to invite users to it)? (y/N) ",
+            "Do you want to update the group ID (will be used to invite users into it)? (y/N) ",
         )
         == "y"
     ):
         group_id_to_invite = get_env(
             "",
-            "Enter ID/USERNAME of group you want to add members to it: ",
+            'Enter the "USERNAME" of the group you want to add members to it: ',
         )
         data[CONFIGURATION_GROUP_SECTION_NAME] = {
             CONFIGURATION_GROUP_INVITE_TO_THIS_GROUP_SECTION_NAME: group_id_to_invite
@@ -360,7 +360,6 @@ def main():
                 count_of_invited_user_by_this_client
                 > TELEGRAM_LIMITATION_TO_INVITE_USER_BY_CLIENT
             ):
-                log("info", "Trying to stop client")
                 client.disconnect()
                 log(
                     "info",
@@ -385,12 +384,12 @@ def main():
                 user_ids.append(participant.id)
             channel_name = title.split(":")[0] or None
             log(
-                "warning",
-                f'Try to add {len(user_ids)} users from "{channel_name}"',
+                "info",
+                f'Trying to add "{len(user_ids)}" users to "{group_id_to_invite}" from "{channel_name}"',
             )
             action = get_env(
                 "",
-                f'Do you want to add from "{channel_name}" channel? (Y/n) (s to skip this client) ',
+                f'Do you want to invite users from "{channel_name}" to "{group_id_to_invite}"? (Y/n) (s to skip this client) ',
             )
             if action == "n":
                 continue
@@ -403,7 +402,7 @@ def main():
                     user_ids,
                 )
             )
-            log("success", f"{len(client_add_response.users)} users invited")
+            log("info", f"{len(client_add_response.users)} users invited")
             count_of_invited_user_by_this_client += len(client_add_response.users)
         # Stop current client
         log("info", "Trying to stop client")
@@ -412,7 +411,7 @@ def main():
     current_index = 0
     for client in clients:
         current_index = current_index + 1
-        log("warning", f"Current session: {client.session.filename}")
+        log("warning", f'Current session/client: "{client.session.filename}"')
         # In some cases, a client may wish to skip a session
         if get_env("", "Do you want to use this client? (Y/n) ") == "n":
             continue
@@ -434,7 +433,7 @@ if __name__ == "__main__":
         try:
             print_banner()
             main()
-            get_env("", "Press Enter to close ...")
+            get_env("", "Press Enter to exit ...")
         except KeyboardInterrupt:
             print("\n")
             log("info", "Goodbye ...")
@@ -442,6 +441,6 @@ if __name__ == "__main__":
     except Exception as main_err:
         # pylint: enable=broad-except
         log("error", f"{main_err}")
-        get_env("", "Press Enter to close ...")
+        get_env("", "Press Enter to exit ...")
 
     sys.exit(0)
