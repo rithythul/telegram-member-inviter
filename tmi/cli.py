@@ -11,33 +11,46 @@ from telethon.tl import functions
 
 from .util import get_env, log
 
-CONFIGURATION_FILE_NAME = "clients.json"
-CONFIGURATION_CLIENTS_SECTION_NAME = "clients"
-CONFIGURATION_CLIENTS_SESSION_SECTION_NAME = "session_name"
-CONFIGURATION_API_SECTION_NAME = "API"
-CONFIGURATION_API_API_ID_SECTION_NAME = "API_ID"
-CONFIGURATION_API_API_HASH_SECTION_NAME = "API_HASH"
-CONFIGURATION_GROUP_SECTION_NAME = "group"
-CONFIGURATION_PROXY_SECTION_NAME = "proxy"
-CONFIGURATION_PROXY_PROTOCOL_NAME = "protocol"
-CONFIGURATION_PROXY_HOST_NAME = "host"
-CONFIGURATION_PROXY_PORT_NAME = "port"
-CONFIGURATION_GROUP_INVITE_TO_THIS_GROUP_SECTION_NAME = "group_id_to_invite"
-TELEGRAM_LIMITATION_TO_INVITE_USER_BY_CLIENT = 999
+__CONFIG_FILE_NAME = "clients.json"
+__CONFIG_CLIENTS_SECTION_NAME = "clients"
+__CONFIG_CLIENTS_SESSION_SECTION_NAME = "session_name"
+__CONFIG_API_SECTION_NAME = "API"
+__CONFIG_API_API_ID_SECTION_NAME = "API_ID"
+__CONFIG_API_API_HASH_SECTION_NAME = "API_HASH"
+__CONFIG_GROUP_SECTION_NAME = "group"
+__CONFIG_PROXY_SECTION_NAME = "proxy"
+__CONFIG_PROXY_PROTOCOL_NAME = "protocol"
+__CONFIG_PROXY_HOST_NAME = "host"
+__CONFIG_PROXY_PORT_NAME = "port"
+__CONFIG_GROUP_INVITE_TO_THIS_GROUP_SECTION_NAME = "group_id_to_invite"
+__TELEGRAM_LIMIT = 999
 
-# Initialize config data
-defaults = {
-    "api": {
-        "id": "default_id",
-        "hash": "default_hash"
-    }
-}
+
+def load_config(key):
+    with open(__CONFIG_FILE_NAME, 'r', encoding='utf-8') as file:
+        data = json.load(file)
+        return data[key]
+
+
+def save_config(data):
+    with open(__CONFIG_FILE_NAME, 'w', encoding='utf-8') as file:
+        json.dump(data, file)
+
+
+def is_yes(prompt):
+    answer = get_env("", prompt + ' (y/N) ')
+    return answer == 'y' or answer == 'Y'
+
+
+def is_no(prompt):
+    answer = get_env("", prompt + " (Y/n) ")
+    return answer == 'n' or answer == 'N'
 
 
 def loop():
     """Main function."""
 
-    data = {CONFIGURATION_CLIENTS_SECTION_NAME: []}
+    data = {__CONFIG_CLIENTS_SECTION_NAME: []}
     first_run = True
     want_to_add_more_client = True
     are_you_sure = False
@@ -47,13 +60,7 @@ def loop():
     # You can set up as many clients as you want
     while True:
         if not first_run:
-            want_to_add_more_client = (
-                get_env(
-                    "",
-                    "Would you like to add more clients? (y/N): ",
-                )
-                == "y"
-            )
+            want_to_add_more_client = is_yes("Would you like to add more clients?")
         if not want_to_add_more_client:
             break
         if first_run:
@@ -62,14 +69,12 @@ def loop():
                 "If press (y), the old cached clients will be unreachable! \
                 \n[INFO] If you already have the configured clients, press (n) to skip this step.",
             )
-            are_you_sure = (
-                get_env("", "Do you want to configure clients? (y/N) ") == "y"
-            )
+            are_you_sure = is_yes("Do you want to configure clients?")
         if not are_you_sure:
             break
         current_session_name = get_env("", "Enter session name (<the_client_name>): ")
-        data[CONFIGURATION_CLIENTS_SECTION_NAME].append(
-            {CONFIGURATION_CLIENTS_SESSION_SECTION_NAME: current_session_name}
+        data[__CONFIG_CLIENTS_SECTION_NAME].append(
+            {__CONFIG_CLIENTS_SESSION_SECTION_NAME: current_session_name}
         )
         anythings_to_update = True
         if first_run:
@@ -77,72 +82,43 @@ def loop():
 
     # Retrieve the old session values if no new values have been set for the client session
     if not anythings_to_update:
-        with open(
-            CONFIGURATION_FILE_NAME, encoding="utf-8"
-        ) as json_file:  # Get clients values from file
-            data[CONFIGURATION_CLIENTS_SECTION_NAME] = json.load(json_file)[
-                CONFIGURATION_CLIENTS_SECTION_NAME
-            ]
+        data[__CONFIG_CLIENTS_SECTION_NAME] = load_config(__CONFIG_CLIENTS_SECTION_NAME)
 
-    if (
-        get_env(
-            "",
-            "Do you want to update API configurations? (y/N) ",
-        )
-        == "y"
-    ):
+    if is_yes("Do you want to update API configurations?"):
         api_id = get_env("TG_API_ID", "Enter your API ID: ", int, is_password=True)
         api_hash = get_env("TG_API_HASH", "Enter your API hash: ", is_password=True)
-        data[CONFIGURATION_API_SECTION_NAME] = {
-            CONFIGURATION_API_API_ID_SECTION_NAME: api_id,
-            CONFIGURATION_API_API_HASH_SECTION_NAME: api_hash,
+        data[__CONFIG_API_SECTION_NAME] = {
+            __CONFIG_API_API_ID_SECTION_NAME: api_id,
+            __CONFIG_API_API_HASH_SECTION_NAME: api_hash,
         }
-        anythings_to_update = True
     else:
-        with open(
-            CONFIGURATION_FILE_NAME, encoding="utf-8"
-        ) as json_file:  # Get values from file
-            data[CONFIGURATION_API_SECTION_NAME] = json.load(json_file)[
-                CONFIGURATION_API_SECTION_NAME
-            ]
-            api_id = data[CONFIGURATION_API_SECTION_NAME][
-                CONFIGURATION_API_API_ID_SECTION_NAME
-            ]
-            api_hash = data[CONFIGURATION_API_SECTION_NAME][
-                CONFIGURATION_API_API_HASH_SECTION_NAME
-            ]
+        pass
 
-    if (
-        get_env(
-            "",
-            "Do you want to update the group ID (will be used to invite users into it)? (y/N) ",
-        )
-        == "y"
-    ):
+    data[__CONFIG_API_SECTION_NAME] = load_config(__CONFIG_API_SECTION_NAME)
+    api_id = data[__CONFIG_API_SECTION_NAME][
+        __CONFIG_API_API_ID_SECTION_NAME
+    ]
+    api_hash = data[__CONFIG_API_SECTION_NAME][
+        __CONFIG_API_API_HASH_SECTION_NAME
+    ]
+
+    if is_yes("Do you want to update the group ID (will be used to invite users into it)?"):
         group_id_to_invite = get_env(
             "",
             'Enter the "USERNAME" of the group you want to add members to it: ',
         )
-        data[CONFIGURATION_GROUP_SECTION_NAME] = {
-            CONFIGURATION_GROUP_INVITE_TO_THIS_GROUP_SECTION_NAME: group_id_to_invite
+        data[__CONFIG_GROUP_SECTION_NAME] = {
+            __CONFIG_GROUP_INVITE_TO_THIS_GROUP_SECTION_NAME: group_id_to_invite
         }
-        anythings_to_update = True
     else:
-        with open(
-            CONFIGURATION_FILE_NAME, encoding="utf-8"
-        ) as json_file:  # Get values from file
-            data[CONFIGURATION_GROUP_SECTION_NAME] = json.load(json_file)[
-                CONFIGURATION_GROUP_SECTION_NAME
-            ]
-            group_id_to_invite = data[CONFIGURATION_GROUP_SECTION_NAME][
-                CONFIGURATION_GROUP_INVITE_TO_THIS_GROUP_SECTION_NAME
-            ]
+        data[__CONFIG_GROUP_SECTION_NAME] = load_config(__CONFIG_GROUP_SECTION_NAME)
+        group_id_to_invite = data[__CONFIG_GROUP_SECTION_NAME][
+            __CONFIG_GROUP_INVITE_TO_THIS_GROUP_SECTION_NAME
+        ]
 
-    if get_env("", "Do you want to use proxy? (y/N) ") == "y":
+    if is_yes("Do you want to use proxy?"):
         want_to_use_proxy = True
-        use_old_proxy_settings = (
-            get_env("", "Do you want to use old proxy settings? (y/N) ") == "y"
-        )
+        use_old_proxy_settings = is_yes("Do you want to use old proxy settings?")
         if not use_old_proxy_settings:
             if get_env("", "Enter the protocol? (HTTP/SOCKS5) ") == "HTTP":
                 protocol = socks.HTTP
@@ -150,38 +126,32 @@ def loop():
                 protocol = socks.SOCKS5
             host = get_env("TG_PROXY_HOST", "Enter the host? ")
             port = get_env("TG_PROXY_PORT", "Enter the port? ", int)
-            data[CONFIGURATION_PROXY_SECTION_NAME] = {
-                CONFIGURATION_PROXY_HOST_NAME: host,
-                CONFIGURATION_PROXY_PORT_NAME: port,
-                CONFIGURATION_PROXY_PROTOCOL_NAME: protocol,
+            data[__CONFIG_PROXY_SECTION_NAME] = {
+                __CONFIG_PROXY_HOST_NAME: host,
+                __CONFIG_PROXY_PORT_NAME: port,
+                __CONFIG_PROXY_PROTOCOL_NAME: protocol,
             }
         else:
-            with open(
-                CONFIGURATION_FILE_NAME, encoding="utf-8"
-            ) as json_file:  # Get values from file
-                data[CONFIGURATION_PROXY_SECTION_NAME] = json.load(json_file)[
-                    CONFIGURATION_PROXY_SECTION_NAME
-                ]
-                host = data[CONFIGURATION_PROXY_SECTION_NAME][
-                    CONFIGURATION_PROXY_HOST_NAME
-                ]
-                protocol = data[CONFIGURATION_PROXY_SECTION_NAME][
-                    CONFIGURATION_PROXY_PROTOCOL_NAME
-                ]
-                port = data[CONFIGURATION_PROXY_SECTION_NAME][
-                    CONFIGURATION_PROXY_PORT_NAME
-                ]
+            data[__CONFIG_PROXY_SECTION_NAME] = load_config(__CONFIG_PROXY_SECTION_NAME)
+            host = data[__CONFIG_PROXY_SECTION_NAME][
+                __CONFIG_PROXY_HOST_NAME
+            ]
+            protocol = data[__CONFIG_PROXY_SECTION_NAME][
+                __CONFIG_PROXY_PROTOCOL_NAME
+            ]
+            port = data[__CONFIG_PROXY_SECTION_NAME][
+                __CONFIG_PROXY_PORT_NAME
+            ]
 
     # Ensure that all values are updated
-    with open(CONFIGURATION_FILE_NAME, encoding="utf-8", mode="w") as json_file:
-        json.dump(data, json_file)
+    save_config(data)
 
     clients = []
-    for client in data[CONFIGURATION_CLIENTS_SECTION_NAME]:
+    for client in data[__CONFIG_CLIENTS_SECTION_NAME]:
         if want_to_use_proxy:
             clients.append(
                 TelegramClient(
-                    session=client[CONFIGURATION_CLIENTS_SESSION_SECTION_NAME],
+                    session=client[__CONFIG_CLIENTS_SESSION_SECTION_NAME],
                     api_id=api_id,
                     api_hash=api_hash,
                     proxy=(protocol, host, port),
@@ -190,7 +160,7 @@ def loop():
         else:
             clients.append(
                 TelegramClient(
-                    session=client[CONFIGURATION_CLIENTS_SESSION_SECTION_NAME],
+                    session=client[__CONFIG_CLIENTS_SESSION_SECTION_NAME],
                     api_id=api_id,
                     api_hash=api_hash,
                 )
@@ -218,8 +188,8 @@ def loop():
         for title, group_or_channel_id in client_channels_or_groups_id.items():
             # Check telegram limitation to invite users by each client
             if (
-                count_of_invited_user_by_this_client
-                > TELEGRAM_LIMITATION_TO_INVITE_USER_BY_CLIENT
+                    count_of_invited_user_by_this_client
+                    > __TELEGRAM_LIMIT
             ):
                 client.disconnect()
                 log(
@@ -274,7 +244,7 @@ def loop():
         current_index = current_index + 1
         log("warning", f'Current session/client: "{client.session.filename}"')
         # In some cases, a client may wish to skip a session
-        if get_env("", "Do you want to use this client? (Y/n) ") == "n":
+        if is_no("Do you want to use this client?"):
             continue
 
         try:

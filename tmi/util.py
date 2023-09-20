@@ -18,6 +18,8 @@ def get_env(name, message, cast=str, is_password=False):
         is_password: (bool, optional): Hide typed text. Defaults to False.
 
     Returns:
+y
+
         object: Text read from stdin or resolved env.
     """
     console = get_console()
@@ -31,7 +33,7 @@ def get_env(name, message, cast=str, is_password=False):
             log("warning", "Should be type of " + str(cast.__name__) + ".")
             time.sleep(1)
 
-# pylint: disable=too-few-public-methods
+
 def get_console():
     """Create and configure default console output formatter
 
@@ -66,7 +68,6 @@ def get_console():
     )
     console = Console(highlighter=Highlighter(), theme=theme)
     return console
-# pylint: enable=too-few-public-methods
 
 
 def log(panel_type, message):
