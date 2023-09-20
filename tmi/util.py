@@ -18,8 +18,6 @@ def get_env(name, message, cast=str, is_password=False):
         is_password: (bool, optional): Hide typed text. Defaults to False.
 
     Returns:
-y
-
         object: Text read from stdin or resolved env.
     """
     console = get_console()

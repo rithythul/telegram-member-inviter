@@ -27,6 +27,17 @@ __TELEGRAM_LIMIT = 999
 
 
 def load_config(key):
+    """
+    The structure of config is:
+     {
+         "clients": [
+             {"session_name": String}
+         ],
+         "API": {"API_ID": Int, "API_HASH": String},
+         "group": {"group_id_to_invite": String},
+         "proxy": {"host": String, "port": Int, "protocol": Int}
+    }
+    """
     with open(__CONFIG_FILE_NAME, 'r', encoding='utf-8') as file:
         data = json.load(file)
         return data[key]
@@ -92,15 +103,13 @@ def loop():
             __CONFIG_API_API_HASH_SECTION_NAME: api_hash,
         }
     else:
-        pass
-
-    data[__CONFIG_API_SECTION_NAME] = load_config(__CONFIG_API_SECTION_NAME)
-    api_id = data[__CONFIG_API_SECTION_NAME][
-        __CONFIG_API_API_ID_SECTION_NAME
-    ]
-    api_hash = data[__CONFIG_API_SECTION_NAME][
-        __CONFIG_API_API_HASH_SECTION_NAME
-    ]
+        data[__CONFIG_API_SECTION_NAME] = load_config(__CONFIG_API_SECTION_NAME)
+        api_id = data[__CONFIG_API_SECTION_NAME][
+            __CONFIG_API_API_ID_SECTION_NAME
+        ]
+        api_hash = data[__CONFIG_API_SECTION_NAME][
+            __CONFIG_API_API_HASH_SECTION_NAME
+        ]
 
     if is_yes("Do you want to update the group ID (will be used to invite users into it)?"):
         group_id_to_invite = get_env(
