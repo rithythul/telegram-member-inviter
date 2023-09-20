@@ -1,26 +1,19 @@
 # pylint: disable=line-too-long
 # pylint: disable=missing-module-docstring
-import os
-import sys
-import time
 import json
+
 import socks
-
 from rich.align import Align
-from rich.highlighter import RegexHighlighter
-from rich.theme import Theme
-from rich.text import Text
-from rich.console import Console
-from rich.panel import Panel
-from rich.padding import Padding
 from rich.markdown import Markdown
-
+from rich.padding import Padding
+from rich.panel import Panel
 # pylint: disable=unused-import
-from telethon import TelegramClient, events, sync
-
+from telethon import TelegramClient
+from telethon.errors import ChatAdminRequiredError, FloodWaitError
 # pylint: enable=unused-import
 from telethon.tl import functions
-from telethon.errors import ChatAdminRequiredError, FloodWaitError
+
+from .util import get_env, log, get_console
 
 CONFIGURATION_FILE_NAME = "clients.json"
 CONFIGURATION_CLIENTS_SECTION_NAME = "clients"
@@ -36,95 +29,13 @@ CONFIGURATION_PROXY_PORT_NAME = "port"
 CONFIGURATION_GROUP_INVITE_TO_THIS_GROUP_SECTION_NAME = "group_id_to_invite"
 TELEGRAM_LIMITATION_TO_INVITE_USER_BY_CLIENT = 999
 
-
-def get_env(name, message, cast=str, is_password=False):
-    """Resolve env variable if exists or get it from stdin
-
-    Args:
-        name (str): The env name
-        message (str): The message to print in stdout
-        cast (object, optional): Cast output to
-        is_password: (bool, optional): Hide typed text. Defaults to False.
-
-    Returns:
-        object: Text read from stdin or resolved env.
-    """
-    console = get_console()
-    if name in os.environ:
-        return os.environ[name]
-    while True:
-        value = console.input(Text(message, style="repr.text"), password=is_password)
-        try:
-            return cast(value)
-        except ValueError:
-            log("warning", "Should be type of " + str(cast.__name__) + ".")
-            time.sleep(1)
-
-
-# pylint: disable=too-few-public-methods
-def get_console():
-    """Create and configure default console output formatter
-
-    Returns:
-        Console: Configured console instance.
-    """
-
-    class Highlighter(RegexHighlighter):
-        """Apply style to matched text with defined regexps."""
-
-        base_style = "repr."
-        highlights = [
-            r"(?P<info>\[INFO\])",
-            r"(?P<success>\[SUCCESS\])",
-            r"(?P<warning>\[WARNING\])",
-            r"(?P<error>\[ERROR\])",
-            r"(?P<text> [\w\-\(\)\.]+)",
-            r"(?P<symbol>[\.,;:\-\!])",
-            r"(?P<command> \w+\+\w+)",
-        ]
-
-    theme = Theme(
-        {
-            "repr.info": "cyan",
-            "repr.warning": "yellow",
-            "repr.error": "bold red",
-            "repr.success": "green",
-            "repr.text": "grey63",
-            "repr.command": "cyan",
-            "repr.symbol": "gray62",
-        }
-    )
-    console = Console(highlighter=Highlighter(), theme=theme)
-    return console
-
-
-# pylint: enable=too-few-public-methods
-
-
-def log(panel_type, message):
-    """Format and log given message.
-
-    Args:
-        panel_type ("info"|"success"|"warning"|"error"): The env name
-        message (str): The message to print in stdout
-
-    Returns:
-        void
-    """
-
-    def get_panel(panel_type, message):
-        return Panel(
-            f"[{panel_type.upper()}] " + message,
-            title=None,
-            title_align="left",
-            subtitle="↓",
-            subtitle_align="left",
-            border_style=f"repr.{panel_type}",
-            highlight=True,
-            padding=1,
-        )
-
-    get_console().print(get_panel(panel_type, message))
+# Initialize config data
+defaults = {
+    "api": {
+        "id": "default_id",
+        "hash": "default_hash"
+    }
+}
 
 
 def print_banner():
@@ -173,17 +84,15 @@ def print_banner():
     )
 
 
-def main():
+def loop():
     """Main function."""
 
-    data = {}
-    data[CONFIGURATION_CLIENTS_SECTION_NAME] = []
+    data = {CONFIGURATION_CLIENTS_SECTION_NAME: []}
     first_run = True
     want_to_add_more_client = True
     are_you_sure = False
     anythings_to_update = False
     want_to_use_proxy = False
-    current_session_name = ""
 
     # You can set up as many clients as you want
     while True:
@@ -203,7 +112,9 @@ def main():
                 "If press (y), the old cached clients will be unreachable! \
                 \n[INFO] If you already have the configured clients, press (n) to skip this step.",
             )
-            are_you_sure = get_env("", "Do you want to configure clients? (y/N) ") == "y"
+            are_you_sure = (
+                get_env("", "Do you want to configure clients? (y/N) ") == "y"
+            )
         if not are_you_sure:
             break
         current_session_name = get_env("", "Enter session name (<the_client_name>): ")
@@ -428,19 +339,7 @@ def main():
             continue
 
 
-if __name__ == "__main__":
-    try:
-        try:
-            print_banner()
-            main()
-            get_env("", "Press Enter to exit ...")
-        except KeyboardInterrupt:
-            print("\n")
-            log("info", "Goodbye ...")
-    # pylint: disable=broad-except
-    except Exception as main_err:
-        # pylint: enable=broad-except
-        log("error", f"{main_err}")
-        get_env("", "Press Enter to exit ...")
-
-    sys.exit(0)
+def cli():
+    print_banner()
+    loop()
+    get_env("", "Press Enter to exit ...")

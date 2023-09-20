@@ -1,5 +1,6 @@
 ###### Requirements ######
 pysocks
-telethon
-rich
-pyinstaller
+telethon~=1.30.3
+rich~=13.5.3        # Rich is a Python library for writing rich text (with color and style) to the terminal
+pyinstaller~=5.13.2 # PyInstaller bundles a Python application and all its dependencies into a single package
+click~=8.1.7        # Command Line Interface Creation Kit

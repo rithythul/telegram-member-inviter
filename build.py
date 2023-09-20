@@ -1,8 +1,9 @@
 import sys
+
 import PyInstaller.__main__
 
 PyInstaller.__main__.run([
-    'bot.py',
+    '__main__.py',
     '--onefile',
     '--console',
     '-n',

@@ -3,12 +3,12 @@ name: Build binary file
 on: 
   push:
     tags:
-      - v*
+    - v*
     branches:
-      - 'main'
+    - 'main'
     paths:
-      - '**.py'
-      - '**.yml'
+    - '**.py'
+    - '**.yml'
 
 jobs:
   build:
@@ -18,60 +18,57 @@ jobs:
       matrix:
         os: [windows-latest, ubuntu-latest, macos-latest]
         include:
-          - os: ubuntu-latest
-            file-postfix: linux86_64
-          - os: macos-latest
-            file-postfix: macos86_64
-          - os: windows-latest
-            file-postfix: win10.exe
+        - os: ubuntu-latest
+          file-postfix: linux86_64
+        - os: macos-latest
+          file-postfix: macos86_64
+        - os: windows-latest
+          file-postfix: win10.exe
 
     steps:
-      - uses: actions/checkout@v4
-      - run: git fetch --prune --unshallow
-      - name: Set up Python '3.10'
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
-      - name: Replace version
-        run: |
-          if [ "$RUNNER_OS" = "macOS" ]; then
-            MAC_SPECIFIC_ARG='.old'
-          fi
-          sed -i $MAC_SPECIFIC_ARG "s/<VERSION>/$(git describe --always)/;s/<PLATFORM>/$RUNNER_OS$RUNNER_ARCH/;s/<BUILD_DATE>/$(date)/" bot.py
-        shell: bash
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-      - name: Build single binary
-        run: |
-          python build.py
-      - name: Upload binary results
-        uses: actions/upload-artifact@v3
-        with:
-          name: telegram-member-inviter-${{ matrix.file-postfix }}
-          path: |
-            dist/telegram-member-inviter-*
-            dist/telegram-member-inviter-*.*
+    - uses: actions/checkout@v4
+    - run: git fetch --prune --unshallow
+    - name: Replace version
+      run: |
+        if [ "$RUNNER_OS" = "macOS" ]; then
+          MAC_SPECIFIC_ARG='.old'
+        fi
+        sed -i $MAC_SPECIFIC_ARG "s/<VERSION>/$(git describe --always)/;s/<PLATFORM>/$RUNNER_OS$RUNNER_ARCH/;s/<BUILD_DATE>/$(date)/" bot.py
+      shell: bash
+    - name: Install dependencies
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+    - run: pip install -r requirements.txt
+    - name: Build single binary
+      run: python build.py
+    - name: Upload binary results
+      uses: actions/upload-artifact@v3
+      with:
+        name: telegram-member-inviter-${{ matrix.file-postfix }}
+        path: |
+          dist/telegram-member-inviter-*
+          dist/telegram-member-inviter-*.*
   release:
 
     needs: build
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
-      - run: git fetch --prune --unshallow
-      - name: Setup env
-        run: echo "BRANCH_LATEST_TAG=$(git describe --always)" >> $GITHUB_ENV
-      - name: Download all build artifacts
-        uses: actions/download-artifact@v3
-      - name: Automatic release
-        uses: marvinpinto/action-automatic-releases@latest
-        with:
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          prerelease: false
-          automatic_release_tag: ${{ env.BRANCH_LATEST_TAG }}
-          files: |
-            telegram-member-inviter-linux86_64
-            telegram-member-inviter-macos86_64
-            telegram-member-inviter-win10.exe
+    - uses: actions/checkout@v4
+    - run: git fetch --prune --unshallow
+    - name: Setup env
+      run: echo "BRANCH_LATEST_TAG=$(git describe --always)" >> $GITHUB_ENV
+    - name: Download all build artifacts
+      uses: actions/download-artifact@v3
+    - name: Automatic release
+      uses: marvinpinto/action-automatic-releases@latest
+      with:
+        repo_token: "${{ secrets.GITHUB_TOKEN }}"
+        prerelease: false
+        automatic_release_tag: ${{ env.BRANCH_LATEST_TAG }}
+        files: |
+          telegram-member-inviter-linux86_64
+          telegram-member-inviter-macos86_64
+          telegram-member-inviter-win10.exe
