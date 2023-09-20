@@ -14,7 +14,7 @@ This program can crawl all users inside the client groups and add them to the ta
 This program acts as a telegram client and can be used to add subscribers to a target group. For channels, there are 200 subscribers limitations and only the first 200 subscribers can be invited by the admin.
 
 # Usage
-Download and run the binary file for your OS.
+Download and run the binary file based on your OS.
 
 # Requirements
 
@@ -28,7 +28,7 @@ pip install -r requirements.txt
 ```
 
 # Setup API configurations
-- Go to the [my telegram](https://my.telegram.org/).
+- Open [my telegram](https://my.telegram.org/).
 - Login with a phone number.
 - Click on `API development tools`.
 - Create an App.
@@ -36,5 +36,6 @@ pip install -r requirements.txt
 
 # Run
 ```shell
-python bot.py 
+# In the project directory
+python .
 ```
