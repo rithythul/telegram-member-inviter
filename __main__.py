@@ -1,9 +1,9 @@
 import sys
 
-from tmi import cli
-from tmi import log, get_env
+from tmi import log, get_env, banner, cli
 
 if __name__ == "__main__":
+    banner.prompt()
     try:
         cli()
     except KeyboardInterrupt:

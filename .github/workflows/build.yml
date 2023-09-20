@@ -1,6 +1,6 @@
 name: Build binary file
 
-on: 
+on:
   push:
     tags:
     - v*
@@ -33,7 +33,7 @@ jobs:
         if [ "$RUNNER_OS" = "macOS" ]; then
           MAC_SPECIFIC_ARG='.old'
         fi
-        sed -i $MAC_SPECIFIC_ARG "s/<VERSION>/$(git describe --always)/;s/<PLATFORM>/$RUNNER_OS$RUNNER_ARCH/;s/<BUILD_DATE>/$(date)/" bot.py
+        sed -i $MAC_SPECIFIC_ARG "s/<VERSION>/$(git describe --always)/;s/<PLATFORM>/$RUNNER_OS$RUNNER_ARCH/;s/<BUILD_DATE>/$(date)/" tmi/banner.py
       shell: bash
     - name: Install dependencies
       uses: actions/setup-python@v4
