@@ -1,6 +1,6 @@
 import sys
 
-from tmi import log, get_env, banner, cli
+from tmi import *
 
 if __name__ == "__main__":
     banner.prompt()

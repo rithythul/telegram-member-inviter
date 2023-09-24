@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+
+[project]
+name = "telegram-member-inviter"
+version = "1.2.0"
+requires-python = ">=3.11"
+description = "A telegram member inviter application."
+readme = "README.md"
+authors = [
+  {name = "@mjavadhpour"}
+]
+license = { file = "LICENSE" }
+dependencies = [
+  "rich~=13.5.3",
+  "telethon~=1.30.3",
+  "pyinstaller~=5.13.2",
+]
+
+[project.optional-dependencies]
+
+[project.scripts]

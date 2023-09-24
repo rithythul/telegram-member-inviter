@@ -19,12 +19,12 @@ Download and run the binary file based on your OS.
 # Requirements
 
 ```shell
-# Python 3.6.6 or higher
+# Python 3.11 or higher
 ```
 
 # Installation
 ```shell
-pip install -r requirements.txt
+pip install .
 ```
 
 # Setup API configurations
