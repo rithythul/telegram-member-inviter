@@ -24,6 +24,8 @@ Download and run the binary file based on your OS.
 
 # Installation
 ```shell
+python -m venv .venv
+. .venv/bin/activate 
 pip install .
 ```
 
