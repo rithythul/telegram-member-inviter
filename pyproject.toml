@@ -14,7 +14,7 @@ license = { file = "LICENSE" }
 dependencies = [
   "rich~=13.5.3",
   "telethon~=1.30.3",
-  "pyinstaller~=5.13.2",
+  "pyinstaller~=6.0.0",
 ]
 
 [project.optional-dependencies]
