@@ -15,6 +15,7 @@ dependencies = [
   "rich~=13.5.3",
   "telethon~=1.30.3",
   "pyinstaller~=6.0.0",
+  "pysocks~=1.7.1"
 ]
 
 [project.optional-dependencies]

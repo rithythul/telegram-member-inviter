@@ -9,6 +9,7 @@ __pycache__
 dist
 .vs
 env
+.venv
 .DS_Store
 *.txt
 *.egg-info
