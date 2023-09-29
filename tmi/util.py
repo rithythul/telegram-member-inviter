@@ -1,5 +1,6 @@
 import os
 import time
+from typing import Any
 
 from rich.console import Console
 from rich.highlighter import RegexHighlighter
@@ -8,8 +9,9 @@ from rich.text import Text
 from rich.theme import Theme
 
 
-def get_env(name, message, cast=str, is_password=False):
-    """Resolve env variable if exists or get it from stdin
+def get_env(name, message, cast=str, is_password=False) -> Any:
+    """
+    Resolve env variable if exists or get it from stdin
 
     Args:
         name (str): The env name
@@ -18,7 +20,7 @@ def get_env(name, message, cast=str, is_password=False):
         is_password: (bool, optional): Hide typed text. Defaults to False.
 
     Returns:
-        object: Text read from stdin or resolved env.
+        Text read from stdin or resolved env.
     """
     console = get_console()
     if name in os.environ:
