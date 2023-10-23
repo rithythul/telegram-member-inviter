@@ -3,7 +3,7 @@ requires = ["setuptools", "wheel"]
 
 [project]
 name = "telegram-member-inviter"
-version = "1.2.0"
+version = "1.2.1"
 requires-python = ">=3.11"
 description = "A telegram member inviter application."
 readme = "README.md"
@@ -15,7 +15,7 @@ dependencies = [
   "rich~=13.6.0",
   "telethon~=1.31.0",
   "pyinstaller~=6.1.0",
-  "pysocks~=1.7.1"
+  "PySocks~=1.7.1"
 ]
 
 [project.optional-dependencies]

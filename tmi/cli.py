@@ -3,7 +3,8 @@
 import dataclasses
 import json
 import os
-from typing import Tuple
+import asyncio
+from typing import Tuple, TypedDict, Optional
 
 import socks
 # pylint: disable=unused-import
@@ -14,8 +15,8 @@ from telethon.tl import functions
 
 from .util import get_env, log
 
-__CONFIG_FILE_NAME = "clients.json"
-__TELEGRAM_LIMIT = 999
+_CONFIG_FILE_NAME = "clients.json"
+_TELEGRAM_LIMIT = 999
 
 
 def load_config() -> "ConfigStruct":
@@ -30,36 +31,40 @@ def load_config() -> "ConfigStruct":
          "proxy": {"host": String, "port": Int, "protocol": Int}
     }
     """
-    if not os.path.exists(__CONFIG_FILE_NAME):
-        log("warning", f'No config file found in path: "./{__CONFIG_FILE_NAME}"')
+    if not os.path.exists(_CONFIG_FILE_NAME):
+        log("warning", f'No config file found in path: "./{_CONFIG_FILE_NAME}"')
         return ConfigStruct(
             clients=[],
-            api=ApiConfig(),
-            group=GroupConfig()
+            api={"api_id": 0, "api_hash": ""},
+            group={"group_id_to_invite": ""}
         )
-    with open(__CONFIG_FILE_NAME, 'r', encoding='utf-8') as file:
+    with open(_CONFIG_FILE_NAME, "r", encoding="utf-8") as file:
         data = json.load(file)
-        return ConfigStruct(
-            clients=data["clients"],
-            api=data["api"],
-            group=data["group"],
-            proxy=data["proxy"]
-        )
+        try:
+            return ConfigStruct(
+                clients=data["clients"],
+                api=data["api"],
+                group=data["group"],
+                proxy=data["proxy"]
+            )
+        except KeyError as err:
+            log("error", f"Missing key {err} in config file")
+            raise
 
 
 def save_config(data):
-    with open(__CONFIG_FILE_NAME, 'w', encoding='utf-8') as file:
+    with open(_CONFIG_FILE_NAME, "w", encoding="utf-8") as file:
         json.dump(data, file)
 
 
 def is_yes(prompt):
-    answer = get_env("", prompt + ' (y/N) ')
-    return answer == 'y' or answer == 'Y'
+    answer = get_env("", prompt + " (y/N) ")
+    return answer == "y" or answer == "Y"
 
 
 def is_no(prompt):
     answer = get_env("", prompt + " (Y/n) ")
-    return answer == 'n' or answer == 'N'
+    return answer == "n" or answer == "N"
 
 
 def invite_members_to_target_group(config: "ConfigStruct", clients: "ClientGenerator"):
@@ -88,7 +93,7 @@ def invite_members_to_target_group(config: "ConfigStruct", clients: "ClientGener
             # Check telegram limitation to invite users by each client
             if (
                     count_of_invited_user_by_this_client
-                    > __TELEGRAM_LIMIT
+                    > _TELEGRAM_LIMIT
             ):
                 t_client.disconnect()
                 log(
@@ -115,21 +120,23 @@ def invite_members_to_target_group(config: "ConfigStruct", clients: "ClientGener
             channel_name = title.split(":")[0] or None
             log(
                 "info",
-                f'Trying to add "{len(user_ids)}" users to "{config.group.group_id_to_invite}" from "{channel_name}"',
+                f'Trying to add "{len(user_ids)}" users to "{config.group.get("group_id_to_invite")}" from "{channel_name}"',
             )
             action = get_env(
                 "",
-                f'Do you want to invite users from "{channel_name}" to "{config.group.group_id_to_invite}"? (Y/n) (s to skip this client) ',
+                f'Do you want to invite users from "{channel_name}" to "{config.group.get("group_id_to_invite")}"? (Y/n) (s to skip this client) ',
             )
             if action == "n":
                 continue
             if action == "s":
                 break
 
-            client_add_response = t_client(
-                functions.channels.InviteToChannelRequest(
-                    config.group.group_id_to_invite,
-                    user_ids,
+            client_add_response = asyncio.run(
+                t_client(
+                    functions.channels.InviteToChannelRequest(
+                        config.group.get("group_id_to_invite"),
+                        user_ids,
+                    )
                 )
             )
             log("info", f"{len(client_add_response.users)} users invited")
@@ -170,21 +177,21 @@ def init_context() -> Tuple["Context", "ConfigStruct"]:
             if is_no("Do you want to configure clients?"):
                 break
         current_session_name = get_env("", "Enter session name (<the_client_name>): ")
-        _config.clients.append(ClientConfig(session_name=current_session_name))
+        _config.clients.append({"session_name": current_session_name})
         if _context.first_run:
             _context.first_run = False
 
     if is_yes("Do you want to update api configurations?"):
         api_id = get_env("TG_API_ID", "Enter your api id: ", int, is_password=True)
         api_hash = get_env("TG_API_HASH", "Enter your api hash: ", is_password=True)
-        _config.api = ApiConfig(api_id, api_hash)
+        _config.api = {"api_id": api_id, "api_hash": api_hash}
 
     if is_yes("Do you want to update the group ID (will be used to invite users into it)?"):
         group_id_to_invite = get_env(
             "",
             'Enter the "USERNAME" of the group you want to add members to it: ',
         )
-        _config.group = GroupConfig(group_id_to_invite)
+        _config.group = {"group_id_to_invite": str(group_id_to_invite)}
 
     if is_yes("Do you want to use proxy?"):
         _context.want_to_use_proxy = True
@@ -196,7 +203,7 @@ def init_context() -> Tuple["Context", "ConfigStruct"]:
                 protocol = socks.SOCKS5
             host = get_env("TG_PROXY_HOST", "Enter the host? ")
             port = get_env("TG_PROXY_PORT", "Enter the port? ", int)
-            _config.proxy = ProxyConfig(host, port, protocol)
+            _config.proxy = {"host": host, "port": port, "protocol": protocol}
 
     # TODO: Observer pattern to update json file on each changes
     return _context, _config
@@ -227,33 +234,33 @@ class ClientGenerator:
 
         client = self._config.clients.pop()
         params = {
-            "session": client.session_name,
-            "api_id": self._config.api.api_id,
-            "api_hash": self._config.api.api_hash,
+            "session": client.get('session_name'),
+            "api_id": self._config.api.get('api_id'),
+            "api_hash": self._config.api.get('api_hash'),
         }
         if self._context.want_to_use_proxy:
-            params["proxy"] = (self._config.proxy.protocol, self._config.proxy.host, self._config.proxy.port)
+            params["proxy"] = (self._config.proxy.get('protocol'), self._config.proxy.get('host'), self._config.proxy.get('port'))
         return TelegramClient(**params)
 
 
 @dataclasses.dataclass
-class ClientConfig:
+class ClientConfig(TypedDict):
     session_name: str
 
 
 @dataclasses.dataclass
-class ApiConfig:
+class ApiConfig(TypedDict):
     api_id: int
     api_hash: str
 
 
 @dataclasses.dataclass
-class GroupConfig:
+class GroupConfig(TypedDict):
     group_id_to_invite: str
 
 
 @dataclasses.dataclass
-class ProxyConfig:
+class ProxyConfig(TypedDict):
     host: str
     port: int
     protocol: int
@@ -264,7 +271,7 @@ class ConfigStruct:
     clients: list[ClientConfig]
     api: ApiConfig
     group: GroupConfig
-    proxy: ProxyConfig | None = None
+    proxy: Optional[ProxyConfig] = None
 
 
 @dataclasses.dataclass
