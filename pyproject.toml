@@ -13,7 +13,7 @@ authors = [
 license = { file = "LICENSE" }
 dependencies = [
   "rich~=13.6.0",
-  "telethon~=1.30.3",
+  "telethon~=1.31.0",
   "pyinstaller~=6.1.0",
   "pysocks~=1.7.1"
 ]
