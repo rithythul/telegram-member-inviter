@@ -1,16 +1,13 @@
 name: Build binary file
 
 on:
+  workflow_dispatch:
   push:
     tags:
     - v*
-    paths:
-    - '**.py'
-    - '**.yml'
 
 jobs:
   build:
-
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -22,7 +19,6 @@ jobs:
           file-postfix: macos86_64
         - os: windows-latest
           file-postfix: win10.exe
-
     steps:
     - uses: actions/checkout@v4
     - run: git fetch --prune --unshallow
@@ -48,11 +44,10 @@ jobs:
         path: |
           dist/telegram-member-inviter-*
           dist/telegram-member-inviter-*.*
+  
   release:
-
     needs: build
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v4
     - run: git fetch --prune --unshallow
