@@ -1,12 +1,11 @@
 import sys
-import asyncio
 
 from tmi import prompt, cli, log, get_env
 
 if __name__ == "__main__":
     prompt()
     try:
-        asyncio.run(cli())
+        cli()
     except KeyboardInterrupt:
         print("\n")
         log("info", "Goodbye ...")
