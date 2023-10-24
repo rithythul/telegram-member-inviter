@@ -3,7 +3,6 @@
 import dataclasses
 import json
 import os
-import asyncio
 from typing import Tuple, TypedDict, Optional
 
 import socks
@@ -70,10 +69,9 @@ def is_no(prompt):
 def invite_members_to_target_group(config: "ConfigStruct", clients: "ClientGenerator"):
     """Main function."""
 
-    def handler(t_client: TelegramClient):
+    async def handler(t_client: TelegramClient):
         # Start client
         log("info", "Trying to start client")
-        t_client.start()
         log("success", f'Successfully Logged in as "{t_client.session.filename}"')
         client_channels_or_groups_id = {}
         count_of_invited_user_by_this_client = 0
@@ -131,19 +129,17 @@ def invite_members_to_target_group(config: "ConfigStruct", clients: "ClientGener
             if action == "s":
                 break
 
-            client_add_response = asyncio.run(
-                t_client(
+            client_add_response = await t_client(
                     functions.channels.InviteToChannelRequest(
-                        config.group.get("group_id_to_invite"),
-                        user_ids,
+                        channel=config.group.get("group_id_to_invite"),
+                        users=user_ids,
                     )
                 )
-            )
+
             log("info", f"{len(client_add_response.users)} users invited")
             count_of_invited_user_by_this_client += len(client_add_response.users)
         # Stop current client
         log("info", "Trying to stop client")
-        t_client.disconnect()
 
     for client in clients:
         log("warning", f'Current session/client: "{client.session.filename}"')
@@ -151,13 +147,13 @@ def invite_members_to_target_group(config: "ConfigStruct", clients: "ClientGener
         if is_no("Do you want to use this client?"):
             continue
 
-        try:
-            handler(client)
-        except (ChatAdminRequiredError, FloodWaitError) as handler_err:
-            client.disconnect()
-            log("error", f"{handler_err}")
-            if is_yes("Do you want to change client?"):
-                continue
+        with client:
+            try:
+                client.loop.run_until_complete(handler(client))
+            except (ChatAdminRequiredError, FloodWaitError) as handler_err:
+                log("error", f"{handler_err}")
+                if is_yes("Do you want to change client?"):
+                    continue
 
 
 def init_context() -> Tuple["Context", "ConfigStruct"]:
