@@ -21,13 +21,13 @@ jobs:
           file-postfix: win10.exe
     steps:
     - uses: actions/checkout@v4
-    - run: git fetch --prune --unshallow
     - name: Replace version
       run: |
         if [ "$RUNNER_OS" = "macOS" ]; then
           MAC_SPECIFIC_ARG='.old'
         fi
         sed -i $MAC_SPECIFIC_ARG "s/<VERSION>/$(git describe --always)/;s/<PLATFORM>/$RUNNER_OS$RUNNER_ARCH/;s/<BUILD_DATE>/$(date)/" tmi/banner.py
+        cat tmi/banner.py
       shell: bash
     - name: Install dependencies
       uses: actions/setup-python@v4

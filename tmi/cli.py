@@ -201,7 +201,6 @@ def init_context() -> Tuple["Context", "ConfigStruct"]:
             port = get_env("TG_PROXY_PORT", "Enter the port? ", int)
             _config.proxy = {"host": host, "port": port, "protocol": protocol}
 
-    # TODO: Observer pattern to update json file on each changes
     return _context, _config
 
 
