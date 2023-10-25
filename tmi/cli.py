@@ -76,7 +76,7 @@ def invite_members_to_target_group(config: "ConfigStruct", clients: "ClientGener
         client_channels_or_groups_id = {}
         count_of_invited_user_by_this_client = 0
         # Fetching all the dialogs (conversations you have open)
-        for dialog in t_client.iter_dialogs():
+        async for dialog in t_client.iter_dialogs():
             if dialog.is_user:
                 continue
             if not dialog.is_channel or not dialog.is_group:
@@ -93,7 +93,6 @@ def invite_members_to_target_group(config: "ConfigStruct", clients: "ClientGener
                     count_of_invited_user_by_this_client
                     > _TELEGRAM_LIMIT
             ):
-                t_client.disconnect()
                 log(
                     "info",
                     "Trying to change client because: telegram limitation for this client was applied",
@@ -104,9 +103,8 @@ def invite_members_to_target_group(config: "ConfigStruct", clients: "ClientGener
             user_ids = (
                 []
             )  # All user ids also channel creator ids except admins and bots
-            participants = t_client.iter_participants(group_or_channel_id, 500)
 
-            for participant in participants:
+            async for participant in t_client.iter_participants(group_or_channel_id, limit=500):
                 if hasattr(participant, "admin_rights"):  # If user is admin
                     # then do not add it to array.
                     continue
