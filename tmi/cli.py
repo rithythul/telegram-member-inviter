@@ -74,7 +74,6 @@ def invite_members_to_target_group(config: "ConfigStruct", clients: "ClientGener
 
     async def handler(t_client: TelegramClient):
         # Start client
-        log("info", "Trying to start client")
         log("success", f'Successfully Logged in as "{t_client.session.filename}"')
         client_channels_or_groups_id = {}
         count_of_invited_user_by_this_client = 0
@@ -148,6 +147,7 @@ def invite_members_to_target_group(config: "ConfigStruct", clients: "ClientGener
         if is_no("Do you want to use this client?"):
             continue
 
+        log("info", f'Trying to start client "{client.session.filename}')
         with client:
             try:
                 client.loop.run_until_complete(handler(client))
