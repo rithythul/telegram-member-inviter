@@ -103,13 +103,15 @@ def invite_members_to_target_group(config: "ConfigStruct", clients: "ClientGener
 
             async for participant in t_client.iter_participants(group_or_channel_id, limit=500):
                 if hasattr(participant, "admin_rights"):  # If user is admin
-                    # then do not add it to array.
+                    # then do not add it to the array.
                     continue
                 if participant.bot:
                     continue
                 if participant.deleted:
                     continue
-                user_ids.append(participant.id)
+                if not participant.username:
+                    continue
+                user_ids.append(participant.username)
             channel_name = title.split(":")[0] or None
             log(
                 "info",
