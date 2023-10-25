@@ -24,19 +24,25 @@ The application relies on API configurations that need to be set manually:
 
 For any other usage directly using the script:
 ## Prerequisites
+
+#### Python 3.11 or later
 To replicate this tool on your systems, ensure that you have Python 3.11 or a later version installed. I recommend setting up a virtual environment using "venv" to enhance the Python environment's effectiveness.
 To set up the Python virtual environment on your system, run the following lines of code:
 ```shell
+# In the project directory
 python -m venv .venv
 . .venv/bin/activate 
 pip install .
 ```
 
-Also You can also use conda to manage the Python version and dependencies for this project. Conda allows you to create isolated Python environments with specific package versions installed. This helps ensure you have the correct dependencies for the project without impacting your system Python installation.
+#### Conda
+Also You can use conda to manage the Python version and dependencies for this project. Conda allows you to create isolated Python environments with specific package versions installed. This helps ensure you have the correct dependencies for the project without impacting your system Python installation.
 
 To create a conda environment and install the requirements:
 
 ```shell
+# In the project directory
+# create a conda environment local to the project, would be detected by vscode
 conda create -p ./.env python==3.12
 conda activate ./.env
 pip install .
@@ -45,7 +51,6 @@ Then you can run the project within the conda environment:
 
 ```shell
 conda activate ./.env
-python .
 ```
 Using conda environments helps avoid dependency conflicts and makes it easier to replicate the exact environment needed for the project.
 
