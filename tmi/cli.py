@@ -43,12 +43,7 @@ def load_config() -> "ConfigStruct":
         data = json.load(file)
 
     try:
-        return ConfigStruct(
-            clients=data["clients"],
-            api=data["api"],
-            group=data["group"],
-            proxy=data["proxy"]
-        )
+        return ConfigStruct(**data)
     except KeyError as err:
         log("error", f"Missing key {err} in config file")
         raise
