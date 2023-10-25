@@ -20,6 +20,8 @@ _TELEGRAM_LIMIT = 999
 
 def load_config() -> "ConfigStruct":
     """
+    Load configuration from config file ore return default values.
+
     The structure of config is:
      {
          "clients": [
@@ -39,21 +41,22 @@ def load_config() -> "ConfigStruct":
         )
     with open(_CONFIG_FILE_NAME, "r", encoding="utf-8") as file:
         data = json.load(file)
-        try:
-            return ConfigStruct(
-                clients=data["clients"],
-                api=data["api"],
-                group=data["group"],
-                proxy=data["proxy"]
-            )
-        except KeyError as err:
-            log("error", f"Missing key {err} in config file")
-            raise
+
+    try:
+        return ConfigStruct(
+            clients=data["clients"],
+            api=data["api"],
+            group=data["group"],
+            proxy=data["proxy"]
+        )
+    except KeyError as err:
+        log("error", f"Missing key {err} in config file")
+        raise
 
 
-def save_config(data):
+def save_config(data: "ConfigStruct"):
     with open(_CONFIG_FILE_NAME, "w", encoding="utf-8") as file:
-        json.dump(data, file)
+        json.dump(data.toJson(), file)
 
 
 def is_yes(prompt):
@@ -199,6 +202,7 @@ def init_context() -> Tuple["Context", "ConfigStruct"]:
             port = get_env("TG_PROXY_PORT", "Enter the port? ", int)
             _config.proxy = {"host": host, "port": port, "protocol": protocol}
 
+    save_config(_config)
     return _context, _config
 
 
@@ -237,23 +241,23 @@ class ClientGenerator:
 
 
 @dataclasses.dataclass
-class ClientConfig(TypedDict):
+class ClientConfigType(TypedDict):
     session_name: str
 
 
 @dataclasses.dataclass
-class ApiConfig(TypedDict):
+class ApiConfigType(TypedDict):
     api_id: int
     api_hash: str
 
 
 @dataclasses.dataclass
-class GroupConfig(TypedDict):
+class GroupConfigType(TypedDict):
     group_id_to_invite: str
 
 
 @dataclasses.dataclass
-class ProxyConfig(TypedDict):
+class ProxyConfigType(TypedDict):
     host: str
     port: int
     protocol: int
@@ -261,10 +265,18 @@ class ProxyConfig(TypedDict):
 
 @dataclasses.dataclass
 class ConfigStruct:
-    clients: list[ClientConfig]
-    api: ApiConfig
-    group: GroupConfig
-    proxy: Optional[ProxyConfig] = None
+    clients: list[ClientConfigType]
+    api: ApiConfigType
+    group: GroupConfigType
+    proxy: Optional[ProxyConfigType] = None
+
+    def toJson(self):
+        return {
+            "clients": self.clients,
+            "api": self.api,
+            "group": self.group,
+            "proxy": self.proxy
+        }
 
 
 @dataclasses.dataclass
