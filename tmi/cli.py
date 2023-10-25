@@ -231,12 +231,12 @@ class ClientGenerator:
 
         client = self._config.clients.pop()
         params = {
-            "session": client.get('session_name'),
-            "api_id": self._config.api.get('api_id'),
-            "api_hash": self._config.api.get('api_hash'),
+            "session": client.get("session_name"),
+            "api_id": self._config.api.get("api_id"),
+            "api_hash": self._config.api.get("api_hash"),
         }
         if self._context.want_to_use_proxy:
-            params["proxy"] = (self._config.proxy.get('protocol'), self._config.proxy.get('host'), self._config.proxy.get('port'))
+            params["proxy"] = (self._config.proxy.get("protocol"), self._config.proxy.get("host"), self._config.proxy.get("port"))
         return TelegramClient(**params)
 
 
