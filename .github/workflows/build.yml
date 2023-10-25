@@ -2,9 +2,6 @@ name: Build binary file
 
 on:
   workflow_dispatch:
-  push:
-    tags:
-    - v*
 
 jobs:
   build:
@@ -21,7 +18,8 @@ jobs:
           file-postfix: win10.exe
     steps:
     - uses: actions/checkout@v4
-    - run: git fetch --prune --unshallow
+      with:
+        fetch-depth: 0
     - name: Replace version
       run: |
         if [ "$RUNNER_OS" = "macOS" ]; then
@@ -51,7 +49,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - run: git fetch --prune --unshallow
+      with:
+        fetch-depth: 0
     - name: Setup env
       run: echo "BRANCH_LATEST_TAG=$(git describe --always)" >> $GITHUB_ENV
     - name: Download all build artifacts
@@ -60,7 +59,7 @@ jobs:
       uses: marvinpinto/action-automatic-releases@latest
       with:
         repo_token: "${{ secrets.GITHUB_TOKEN }}"
-        prerelease: false
+        prerelease: true
         automatic_release_tag: ${{ env.BRANCH_LATEST_TAG }}
         files: |
           telegram-member-inviter-linux86_64
