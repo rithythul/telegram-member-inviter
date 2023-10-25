@@ -10,6 +10,7 @@ dist
 .vs
 env
 .venv
+.env
 .DS_Store
 *.txt
 *.egg-info

@@ -32,6 +32,23 @@ python -m venv .venv
 pip install .
 ```
 
+Also You can also use conda to manage the Python version and dependencies for this project. Conda allows you to create isolated Python environments with specific package versions installed. This helps ensure you have the correct dependencies for the project without impacting your system Python installation.
+
+To create a conda environment and install the requirements:
+
+```shell
+conda create -p ./.env python==3.12
+conda activate ./.env
+pip install .
+```
+Then you can run the project within the conda environment:
+
+```shell
+conda activate ./.env
+python .
+```
+Using conda environments helps avoid dependency conflicts and makes it easier to replicate the exact environment needed for the project.
+
 ## Run
 ```shell
 # In the project directory
