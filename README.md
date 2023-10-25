@@ -42,8 +42,8 @@ To create a conda environment and install the requirements:
 
 ```shell
 # In the project directory
-# create a conda environment local to the project, would be detected by vscode
-conda create -p ./.env python==3.12
+# create a conda environment local to the project
+conda create -p ./.env python=3.12 -y
 conda activate ./.env
 pip install .
 ```
